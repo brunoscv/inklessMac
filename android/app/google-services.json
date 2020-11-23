@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "53226453252",
+    "firebase_url": "https://projeto-video-inkless.firebaseio.com",
+    "project_id": "projeto-video-inkless",
+    "storage_bucket": "projeto-video-inkless.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:53226453252:android:87c6d7278161e3d173f851",
+        "android_client_info": {
+          "package_name": "com.videoInkless"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "53226453252-c7clmbts3caetl5tej56o04v1a6pohkg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4G0WYELje6opBZyejinR06NFXrnNrvF8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "53226453252-c7clmbts3caetl5tej56o04v1a6pohkg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:53226453252:android:e73a14e0cf9e162373f851",
+        "android_client_info": {
+          "package_name": "com.videoinkless"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "53226453252-c7clmbts3caetl5tej56o04v1a6pohkg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4G0WYELje6opBZyejinR06NFXrnNrvF8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "53226453252-c7clmbts3caetl5tej56o04v1a6pohkg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
