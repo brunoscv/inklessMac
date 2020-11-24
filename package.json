@@ -25,6 +25,7 @@
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-native": "0.63.3",
+    "react-native-blink-view": "^0.0.6",
     "react-native-geolocation-service": "^5.0.0",
     "react-native-gesture-handler": "^1.8.0",
     "react-native-masked-text": "^1.13.0",

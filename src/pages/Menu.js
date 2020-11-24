@@ -118,6 +118,12 @@ export default function Menu({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
+      <View style={styles.secondrow}>
+          <TouchableOpacity onPress={ () => navigation.navigate('Acceptcall', {scheduling_id: 254}) } style={styles.button}>
+            <FontAwesomeIcon icon={ faFile } size={80} color="#fff"/>
+            <Text style={styles.buttonText}>Laudos</Text>
+          </TouchableOpacity>
+      </View>
       <View>
         <View style={ {flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 20} }>
           <Text style={styles.exitText}>Sair</Text>

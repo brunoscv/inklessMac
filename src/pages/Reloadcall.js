@@ -20,6 +20,7 @@ export default function Reloadcall({ navigation }) {
     const [confirmation, setConfirmation] = useState(false);
     const [answered, setAnswered] = useState(false);
     const [response, setResponse] = useState([]);
+    const [showText, setShowText] = useState(true);
     
     const agendamento = navigation.getParam('scheduling_id', '0');
 
@@ -57,6 +58,14 @@ export default function Reloadcall({ navigation }) {
             navigation.navigate('Video', { apiKey: `${response.data.apiKey}`, sessionId: `${response.data.session_id}`, tokenId: `${response.data.session_token}` });
         }
     }
+
+    useEffect(() => {
+        // Change the state every second or the time given by User.
+        const interval = setInterval(() => {
+          setShowText((showText) => !showText);
+        }, 500);
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <View style={styles.container}>
@@ -107,7 +116,11 @@ export default function Reloadcall({ navigation }) {
                                             {callLoading ? <ActivityIndicator size="small" color="#0000ff" style={{alignItems: 'center', justifyContent: 'center'}}/> : <FontAwesomeIcon icon={ faVideo } size={20} color="#fff"/>}
                                                 <Text style={styles.buttonText}>Atender Chamada</Text>
                                             </View>
-                                        </TouchableOpacity> 
+                                        </TouchableOpacity>
+                                        <Text
+                                            style={[styles.textStyle, { display: showText ? 'none' : 'flex' }]}>
+                                            Lorem Ipsum is simply dummy text of the printing..
+                                        </Text>
                                     </View>
                             </View>
                         : 

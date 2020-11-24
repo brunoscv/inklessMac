@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faCheckCircle, faPhoneSquareAlt, faVideo } from '@fortawesome/free-solid-svg-icons';
 import { ScrollView } from 'react-native-gesture-handler';
 import { format, parseISO } from "date-fns";
-
 import api from '../services/api';
 import axios from 'axios';
 import NetInfo from "@react-native-community/netinfo";
@@ -20,6 +19,7 @@ export default function Acceptcall({ navigation }) {
     const [confirmation, setConfirmation] = useState(false);
     const [answered, setAnswered] = useState(false);
     const [response, setResponse] = useState([]);
+    const [showText, setShowText] = useState(true);
     
     const agendamento = navigation.getParam('scheduling_id', '0');
 
@@ -88,6 +88,14 @@ export default function Acceptcall({ navigation }) {
         loadSchedulings();
     }, []);
 
+    useEffect(() => {
+        // Change the state every second or the time given by User.
+        const interval = setInterval(() => {
+          setShowText((showText) => !showText);
+        }, 500);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" style={styles.statusBar}/>
@@ -134,14 +142,18 @@ export default function Acceptcall({ navigation }) {
                                     <View style={styles.cardFooter}>
                                         {
                                             schedulings.data.session_id && schedulings.data.session_token 
-                                            ?  <TouchableOpacity onPress={ () => navigation.navigate('Video', { apiKey: `${schedulings.data.apiKey}`, sessionId: `${schedulings.data.session_id}`, tokenId: `${schedulings.data.session_token}` })} style={styles.callButton}>
+                                            ?   <View> 
+                                                <TouchableOpacity onPress={ () => navigation.navigate('Video', { apiKey: `${schedulings.data.apiKey}`, sessionId: `${schedulings.data.session_id}`, tokenId: `${schedulings.data.session_token}` })} style={styles.callButton}>
                                                     <View style={{flexDirection: 'row', justifyContent:'center', alignItems: 'center'}}>
                                                         <FontAwesomeIcon icon={ faPhoneSquareAlt } size={20} color="#fff"/>
                                                         <Text style={styles.buttonText}>Atender Chamada</Text>
                                                     </View>
-                                                </TouchableOpacity> 
+                                                </TouchableOpacity>
+                                                </View>
+                                                
                                             : null
                                         }
+                                            
                                         <View>
                                         {
                                             schedulings.data.meet_call == true ?
@@ -150,10 +162,15 @@ export default function Acceptcall({ navigation }) {
                                                     <Text style={styles.buttonText}>Chamada Confirmada</Text>
                                                 </TouchableOpacity>
                                             : 
+                                            <View> 
                                                 <TouchableOpacity  onPress={ () => handle(schedulings.data.id) } style={styles.primaryButton}>
                                                 {callLoading ? <ActivityIndicator size="small" color="#0000ff" style={{alignItems: 'center', justifyContent: 'center'}}/> : <FontAwesomeIcon icon={ faVideo } size={20} color="#fff"/>}
                                                     <Text style={styles.buttonText}>Confirmar Chamada</Text>
                                                 </TouchableOpacity>
+                                                <Text style={[styles.textStyle, { display: showText ? 'none' : 'flex' }]}>
+                                                    O médico está chamando agora ...
+                                                </Text>
+                                            </View>
                                         }
                                         </View> 
                                     </View>
