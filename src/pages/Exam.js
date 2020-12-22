@@ -69,7 +69,7 @@ export default function Exam({ navigation }) {
                     <Text style={{fontSize: 22, color: '#fff'}}>Atendimento no Consultório</Text>
                 </View>
                 <View style={{paddingVertical: 5}}>
-                    <Image style={{width: 200, height:200, borderRadius: 200 / 2}} source={{uri: 'https://demo.denarius.digital/storage/img/152217202009085f57cbd9f3f45.jpeg'}}/>
+                    <Image style={{width: 200, height:200, borderRadius: 200 / 2}} source={{uri: 'https://gastrovita.inkless.digital/storage/img/152217202009085f57cbd9f3f45.jpeg'}}/>
                 </View>
                 <View style={{paddingHorizontal: 20}}>
                     <Text style={{fontSize: 16, color: '#fff', paddingVertical: 20}}>Olá, eu sou o Dr. Carlos Simas de Carvalho Sousa e irei atender você no Consultório 2.</Text>
