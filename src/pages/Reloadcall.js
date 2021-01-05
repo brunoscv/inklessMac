@@ -102,7 +102,7 @@ export default function Reloadcall({ navigation }) {
                                 paddingVertical: 10,
                                 borderRadius: 20 }}>
                                     <View style={styles.cardBody} >
-                                        <Image style={styles.cardAvatar} source={{uri: 'https://gastrovita.inkless.digital/storage/' + schedulings.data.professional_image}}/>
+                                        <Image style={styles.cardAvatar} source={{uri: 'https://demo.inkless.digital/storage/' + schedulings.data.professional_image}}/>
                                         <View style={styles.cardLeftSide} >
                                             <Text style={styles.cardName} >Dr(a). {schedulings.data.professional_name}</Text>
                                             <Text style={styles.cardTime} >{ format(parseISO(schedulings.data.date_scheduling), "dd/MM/yyyy") } às { schedulings.data.time_starting_booked }</Text>

@@ -90,7 +90,7 @@ export default function Menu({ navigation }) {
       <View>
         <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row', justifyContent: 'space-between'} }>
           <Text style={styles.menuText}>Bem vindo(a)</Text>
-          <Image style={styles.cardAvatar} source={{uri: 'https://gastrovita.inkless.digital/storage/img/152013202009085f57cb5d778b8.png'}}/> 
+          <Image style={styles.cardAvatar} source={{uri: 'https://demo.inkless.digital/storage/img/152013202009085f57cb5d778b8.png'}}/> 
         </View>
       </View>
       <View style={styles.content}>

@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-    //baseURL: 'https://demo.denarius.digital/api',
-    baseURL: 'https://gastrovita.inkless.digital/api',
+    baseURL: 'https://demo.inkless.digital/api',
+    //baseURL: 'https://gastrovita.inkless.digital/api',
     
 });
 

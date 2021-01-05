@@ -124,7 +124,7 @@ export default function Historic({ navigation }) {
                                 paddingVertical: 10,
                                 borderRadius: 20 }}>
                                 <View style={styles.cardBody} >
-                                    <Image style={styles.cardAvatar} source={{uri: 'https://gastrovita.inkless.digital/storage/' + scheduling.professional_image}}/>
+                                    <Image style={styles.cardAvatar} source={{uri: 'https://demo.inkless.digital/storage/' + scheduling.professional_image}}/>
                                     <View style={styles.cardLeftSide} >
                                         <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
                                         <Text style={styles.cardName} >Dr(a). {scheduling.professional_name}</Text>

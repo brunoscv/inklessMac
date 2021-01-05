@@ -71,14 +71,14 @@ export default function Report({ navigation }) {
   };
 
   
-  //const REMOTE_IMAGE_PATH = 'https://gastrovita.inkless.digital/storage/img/152217202009085f57cbd9f3f45.jpeg';
+  //const REMOTE_IMAGE_PATH = 'https://demo.inkless.digital/storage/img/152217202009085f57cbd9f3f45.jpeg';
   const downloadImage = (document) => {
     // Main function to download the image
     requestFilePermission();
     // To add the time suffix in filename
     let date = new Date();
     // Image URL which we want to download
-    let image_URL = 'https://gastrovita.inkless.digital/storage/'+ document;    
+    let image_URL = 'https://demo.inkless.digital/storage/'+ document;    
     // Getting the extention of the file
     let ext = getExtention(image_URL);
     ext = '.' + ext[0];

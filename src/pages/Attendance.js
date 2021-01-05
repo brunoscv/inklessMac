@@ -75,7 +75,7 @@ export default function Attendance({ navigation }) {
                     <Text style={{fontSize: 22, color: '#fff'}}>Atendimento no Guichê</Text>
                 </View>
                 <View style={{paddingVertical: 5}}>
-                    <Image style={{width: 200, height:200, borderRadius: 200 / 2}} source={{uri: 'https://gastrovita.inkless.digital/storage/img/181914202002115e431a52db653.png'}}/>
+                    <Image style={{width: 200, height:200, borderRadius: 200 / 2}} source={{uri: 'https://demo.inkless.digital/storage/img/181914202002115e431a52db653.png'}}/>
                 </View>
                 <View style={{paddingHorizontal: 20}}>
                     <Text style={{fontSize: 16, color: '#fff', paddingVertical: 20}}>Olá, eu sou José Filho. Por favor, dirija-se ao GUICHÊ 2 - TÉRREO para que eu o atenda.</Text>
