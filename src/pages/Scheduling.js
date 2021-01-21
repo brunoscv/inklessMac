@@ -145,10 +145,10 @@ export default function Scheduling({ navigation }) {
                     latitude: -5.091214,
                     longitude: -42.806561,
                 });
-                // if(dist > 200) {
-                //     Alert.alert('Confirmação', 'Você precisa estar próximo ao local da consulta para realizar o Check-In');
-                // }
-                if(dist <= 20000000000) {
+                if(dist > 200) {
+                    Alert.alert('Confirmação', 'Você precisa estar próximo ao local da consulta para realizar o Check-In');
+                }
+                if(dist <= 200) {
                     realizarCheckin(scheduling_id);
                 }
             },
