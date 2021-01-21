@@ -7,6 +7,8 @@ import { ScrollView } from 'react-native-gesture-handler';
 
 import { format, parseISO } from "date-fns";
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import api from '../services/api';
 import messaging from '@react-native-firebase/messaging';
 import RNFetchBlob from 'rn-fetch-blob';
@@ -156,6 +158,16 @@ export default function Document({ navigation }) {
         }
         loadDocuments();
     }, []);
+
+    const [username, setUsername] = useState('');
+    useEffect(() => {
+        async function loadName() {
+            const user_id = await AsyncStorage.getItem('@storage_Key');
+            const response = await api.get('/mobile/checkinid/' + user_id, { responseType: 'json' });
+            setUsername(response.data.name);
+        }
+        loadName();
+    }, []);
     
     return (
         <View style={styles.container}>
@@ -176,7 +188,7 @@ export default function Document({ navigation }) {
                 borderTopLeftRadius: 30, 
                 borderTopRightRadius: 30 }}>
                     <View style={styles.titleBlock}>
-                        <Text style={styles.subnameBlock}>{"Anna Renatta"}</Text>
+                        <Text style={styles.subnameBlock}>{username}</Text>
                     </View>
                     <View>
                         <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os documentos</Text>
@@ -270,7 +282,7 @@ const styles = StyleSheet.create({
     },
     subnameBlock: {
         color: '#fff',
-        fontSize: 30,
+        fontSize: 13,
     },
     cardAvatar: {
         height: 60,

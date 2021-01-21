@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faClock, faBookReader, faFile, faFolder, faSignOutAlt, faVideo } from '@fortawesome/free-solid-svg-icons';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import messaging from '@react-native-firebase/messaging';
 
 
 export default function Menu({ navigation }) {
   const [scheduling, setScheduling] = useState(0);
-
+  const [userId, setUserId] = useState('');
+  
+ 
   /** FIREBASE NOTIFICATION NAVIGATOR */
   useEffect(() => {
     requestUserPermission();
@@ -70,6 +72,7 @@ export default function Menu({ navigation }) {
 
     if (enabled) {
       getFcmToken()
+      getMyStringValue()
       console.log('Authorization status:', authStatus);
     }
   }
@@ -83,10 +86,27 @@ export default function Menu({ navigation }) {
      console.log("Failed", "No token received");
     }
   }
+
+  getMyStringValue = async () => {
+    try {
+      const logged = await AsyncStorage.getItem('@storage_Key');
+      if (logged == null || logged == "" || !logged) {
+        navigation.navigate('Login');
+      }
+    } catch(e) {}
+  }
+
+  async function removeValue() {
+    try {
+      await AsyncStorage.removeItem('@storage_Key');
+      navigation.navigate('Login');
+    } catch(e) {}
+  }
+
   /** FIREBASE NOTIFICATION NAVIGATOR */
 
   return (
-    <View style={styles.container}>
+      <View style={styles.container}>
       <View>
         <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row', justifyContent: 'space-between'} }>
           <Text style={styles.menuText}>Bem vindo(a)</Text>
@@ -118,17 +138,11 @@ export default function Menu({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
-      <View style={styles.secondrow}>
-          <TouchableOpacity onPress={ () => navigation.navigate('Acceptcall', {scheduling_id: 254}) } style={styles.button}>
-            <FontAwesomeIcon icon={ faFile } size={80} color="#fff"/>
-            <Text style={styles.buttonText}>Laudos</Text>
-          </TouchableOpacity>
-      </View>
       <View>
         <View style={ {flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 20} }>
           <Text style={styles.exitText}>Sair</Text>
           <View style={{paddingVertical: 12, paddingHorizontal: 5}}>
-            <TouchableOpacity onPress={ () => navigation.navigate('Login') }>
+            <TouchableOpacity onPress={ () => removeValue() }>
               <FontAwesomeIcon icon={ faSignOutAlt } size={20} color="#fff"/>
             </TouchableOpacity> 
           </View>

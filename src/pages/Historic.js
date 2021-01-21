@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faBan, faUserCircle, faCheckCircle, faCircleNotch } from '@fortawesome/free-solid-svg-icons';
 import { ScrollView } from 'react-native-gesture-handler';
 import { format, parseISO } from "date-fns";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import api from '../services/api';
 import messaging from '@react-native-firebase/messaging';
@@ -74,10 +75,11 @@ export default function Historic({ navigation }) {
   /** FIREBASE NOTIFICATION NAVIGATOR */
 
     const [schedulings, setSchedulings] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [username, setUsername] = useState('');
     useEffect(() => {
         async function loadSchedulings() {
-            const user_id = 30059;
+            const user_id = await AsyncStorage.getItem('@storage_Key');
             const response = await api.get('/mobile/checkinidall/' + user_id, { responseType: 'json' });
             //O response retorna como objeto no Inkless
             //É preciso dar um cast para array, como é feito abaixo.
@@ -85,7 +87,8 @@ export default function Historic({ navigation }) {
             Object.keys(response.data.schedulings).forEach(key => arrResponse.push(response.data.schedulings[key]));
             //
             setSchedulings(arrResponse);
-            setLoading(loading);
+            setLoading(!loading);
+            setUsername(response.data.name);
         }
         loadSchedulings();
     }, []);
@@ -109,7 +112,7 @@ export default function Historic({ navigation }) {
                 position: 'relative',
                 backgroundColor: "#eee"}}>
                     <View style={styles.titleBlock}>
-                        <Text style={styles.subnameBlock}>{"Anna Renatta"}</Text>
+                        <Text style={styles.subnameBlock}>{username}</Text>
                     </View>
                     <View>
                         <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os agendamentos</Text>
@@ -205,7 +208,7 @@ const styles = StyleSheet.create({
     },
     subnameBlock: {
         color: '#fff',
-        fontSize: 30,
+        fontSize: 13,
     },
     cardAvatar: {
         height: 60,

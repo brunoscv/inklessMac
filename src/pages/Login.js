@@ -3,7 +3,9 @@ import { View, KeyboardAvoidingView, Platform, Image, StyleSheet, Text, TextInpu
 import messaging from '@react-native-firebase/messaging';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faAngleRight } from '@fortawesome/free-solid-svg-icons';
-//import AsyncStorage from '@react-native-async-storage/async-storage';
+import { format } from "date-fns";
+import Moment from 'moment';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TextInputMask } from 'react-native-masked-text';
 import NetInfo from "@react-native-community/netinfo";
 
@@ -19,9 +21,16 @@ export default function Login({ navigation }) {
     const [loading, setLoading] = useState(false);
     const [connState, setConnState] = useState(0);
 
+    const [userId, setUserId] = useState('');
+    const [id, setId] = useState('');
+    const [cpfUnmaskedField, setCpfUnmaskedField] = useState('');
+    const [nascUnmaskedField, setNascUnmaskedField] = useState('');
+    const [isLogedin, setIsLogedin] = useState(false);
+
     useEffect(() => {
         NetInfo.fetch().then(state => {
             setConnState(state);
+            getMyStringValue();
         });
 
         const unsubscribe = NetInfo.addEventListener(state => {
@@ -75,38 +84,86 @@ export default function Login({ navigation }) {
     }
 
     getFcmToken = async() => {
-            const fcmToken = await messaging().getToken();
-            if (fcmToken) {
-                //  console.log(fcmToken);
-                console.log("Your Firebase Token is:", fcmToken);
-            } else {
-                console.log("Failed", "No token received");
-            }
-        }
-        /** FIREBASE NOTIFICATION NAVIGATOR */
-
-    async function handleSubmit() {
-        const user_id = 30059;
-        
         const fcmToken = await messaging().getToken();
-        setLoading(true);
-        if (connState.isConnected == true) {
-           
-            const response = await api.put('/inklessapp/update/customer', { id: user_id, device_id: fcmToken, token_id: fcmToken });
-            console.log(response);
-            if (response) {
-                setResponse(response);
-                setLoading(false);
-               
-                navigation.navigate('Menu');
-            } else {
-                Alert.alert("Conexão", "Verifique os dados digitados e tente novamente!");
-            }
+        if (fcmToken) {
+            //  console.log(fcmToken);
+            console.log("Your Firebase Token is:", fcmToken);
         } else {
-            setLoading(false);
-            Alert.alert("Conexão", "Detectamos que você não possui conexão ativa com a Internet. Por favor tente novamente!");
+            console.log("Failed", "No token received");
         }
     }
+    /** FIREBASE NOTIFICATION NAVIGATOR */
+
+    const storeData = async (value) => {
+        try {
+            const varr = await AsyncStorage.setItem('@storage_Key', value);
+        } catch (e) {
+          // saving error
+        }
+    }
+
+    getMyStringValue = async () => {
+        try {
+          const logged = await AsyncStorage.getItem('@storage_Key');
+          if (logged) {
+            navigation.navigate('Menu');
+          }
+        } catch(e) {}
+    }
+
+    async function handleLogin() {
+        const unmaskedNasc = Moment(nascUnmaskedField.getRawValue()).format('YYYY-MM-DD');
+        const unmaskedCpf = cpfUnmaskedField.getRawValue();
+        const response = await api.post('/mobile/searchcpfbirth', { cpf: unmaskedCpf, birth: unmaskedNasc });
+       
+        //console.log(response.data['data'][0]['id']);
+        if (response.data['data'] > '0') {
+           
+            const fcmToken = await messaging().getToken();
+            setLoading(true);
+            if (connState.isConnected == true) {
+            
+                const responseSec = await api.put('/inklessapp/update/customer', { id: response.data['data'][0]['id'], device_id: fcmToken, token_id: fcmToken });
+                
+                if (responseSec) {
+                    setResponse(responseSec);
+                    setLoading(false);
+                    storeData(JSON.stringify(response.data['data'][0]['id']));
+                    navigation.navigate('Menu');
+                } else {
+                    Alert.alert("Conexão", "Verifique os dados digitados e tente novamente!");
+                }
+            } else {
+                setLoading(false);
+                Alert.alert("Conexão", "Detectamos que você não possui conexão ativa com a Internet. Por favor tente novamente!");
+            }
+
+        } else {
+            Alert.alert("Conexão", "Verifique os dados digitados e tente novamente!");
+        }
+    }
+    // async function handleSubmit() {
+    //     //const user_id = id;
+    //     console.log(userId);
+    //     const fcmToken = await messaging().getToken();
+    //     setLoading(true);
+    //     if (connState.isConnected == true) {
+           
+    //         const response = await api.put('/inklessapp/update/customer', { id: userId, device_id: fcmToken, token_id: fcmToken });
+    //         console.log(response);
+    //         if (response) {
+    //             setResponse(response);
+    //             setLoading(false);
+               
+    //             navigation.navigate('Menu');
+    //         } else {
+    //             Alert.alert("Conexão", "Verifique os dados digitados e tente novamente!");
+    //         }
+    //     } else {
+    //         setLoading(false);
+    //         Alert.alert("Conexão", "Detectamos que você não possui conexão ativa com a Internet. Por favor tente novamente!");
+    //     }
+    // }
 
     return (
         <KeyboardAvoidingView enabled={Platform.OS == 'ios'} behavior="padding" style={styles.container}>
@@ -114,27 +171,50 @@ export default function Login({ navigation }) {
     
           <View style={styles.form}>
             <Text style={styles.label}>CPF:</Text>
-            <TextInput
+            {/* <TextInput
               style={styles.input}
               placeholder="Ex: 123.456.789-00"
               placeholderTextColor="#fff"
               keyboardType="number-pad"
-              value={cpf}
-              onChangeText={setCpf}
+              onChangeText={ cpf => setCpf(cpf)}
+              defaultValue={cpf}
+            /> */}
+            <TextInputMask
+                type={'cpf'}
+                style={styles.input}
+                placeholder="Ex: 123.456.789-00"
+                placeholderTextColor="#fff"
+                value={cpf}
+                onChangeText={cpf => setCpf(cpf)}
+                // add the ref to a local var
+                ref={(ref) => setCpfUnmaskedField(ref)}
             />
             
     
             <Text style={styles.label}>Data Nascimento:</Text>
-            <TextInput
+            {/* <TextInput
               style={styles.input}
               placeholder="Ex: 99/99/9999"
               placeholderTextColor="#fff"
-              keyboardType="number-pad"
-              value={nasc}
-              onChangeText={setNasc}
+              //keyboardType="number-pad"
+              onChangeText={nasc => setNasc(nasc)}
+              defaultValue={nasc}
+            /> */}
+            <TextInputMask
+                type={'datetime'}
+                options={{
+                  format: 'DD/MM/YYYY'
+                }}
+                style={styles.input}
+                placeholder="Ex: 99/99/9999"
+                placeholderTextColor="#fff"
+                value={nasc}
+                onChangeText={nasc => setNasc(nasc)}
+                // add the ref to a local var
+                ref={(ref) => setNascUnmaskedField(ref)}
             />
             <View>
-              <TouchableOpacity onPress={ handleSubmit } style={styles.loginButton}>
+              <TouchableOpacity onPress={ handleLogin } style={styles.loginButton}>
                 <Text style={styles.buttonText}>Entrar</Text>
                 {!loading ? <FontAwesomeIcon icon={ faAngleRight } size={25} color="#1976d2"/> : <ActivityIndicator size="small" color="#0000ff"/> }
               </TouchableOpacity>

@@ -1,7 +1,7 @@
 import { createAppContainer, createSwitchNavigator} from 'react-navigation';
 
-import Login from './pages/Login';
 import Menu from './pages/Menu';
+import Login from './pages/Login';
 import Scheduling from './pages/Scheduling';
 import Reloadscheduling from './pages/Reloadscheduling';
 import Historic from './pages/Historic';
@@ -16,9 +16,9 @@ import Reloadcall from './pages/Reloadcall';
 
 const Routes = createAppContainer(
     createSwitchNavigator({
+        Menu,
         Login,
         Users,
-        Menu,
         Scheduling,
         Reloadscheduling,
         Historic,

@@ -7,6 +7,8 @@ import { format, parseISO } from "date-fns";
 import Geolocation from 'react-native-geolocation-service';
 import * as geolib from 'geolib';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import api from '../services/api';
 import axios from 'axios';
 import NetInfo from "@react-native-community/netinfo";
@@ -170,6 +172,16 @@ export default function Reloadscheduling({ navigation }) {
         ); 
     }
 
+    const [username, setUsername] = useState('');
+    useEffect(() => {
+        async function loadName() {
+            const user_id = await AsyncStorage.getItem('@storage_Key');
+            const response = await api.get('/mobile/checkinid/' + user_id, { responseType: 'json' });
+            setUsername(response.data.name);
+        }
+        loadName();
+    }, []);
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" style={styles.statusBar}/>
@@ -190,7 +202,7 @@ export default function Reloadscheduling({ navigation }) {
                 borderTopLeftRadius: 30, 
                 borderTopRightRadius: 30}}>
                     <View style={styles.titleBlock}>
-                        <Text style={styles.subnameBlock}>{"Anna Renatta"}</Text>
+                        <Text style={styles.subnameBlock}>{username}</Text>
                     </View>
                     <View>
                         <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os check-in's</Text>
@@ -309,7 +321,7 @@ const styles = StyleSheet.create({
     },
     subnameBlock: {
         color: '#fff',
-        fontSize: 30,
+        fontSize: 13,
     },
     cardAvatar: {
         height: 60,
