@@ -50,7 +50,7 @@ export default function Acceptcall({ navigation }) {
 
         const config = {
             method: "put",
-            url: `https://demo.denarius.digital/api/mobile/scheduling/meetCall`,
+            url: `https://demo.inkless.digital/api/mobile/scheduling/meetCall`,
             data: JSON.stringify(data),
             headers: { "content-type": "application/json" }
         };

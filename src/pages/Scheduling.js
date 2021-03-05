@@ -20,6 +20,7 @@ import logo from '../../assets/st.png';
 export default function Scheduling({ navigation }) {
 
     const [schedulings, setSchedulings] = useState([]);
+    const [scheduling, setScheduling] = useState(0);
     const [loading, setLoading] = useState(true);
     const [hasLocationPermission, setHasLocationPermission] = useState(false);
     const [hasCheckin, setCheckin] = useState(false);
@@ -43,27 +44,57 @@ export default function Scheduling({ navigation }) {
     }, []);
 
     /** FIREBASE NOTIFICATION NAVIGATOR */
-  useEffect(() => {
-    requestUserPermission();
-    const unsubscribe = messaging().onMessage(async remoteMessage => {
-      //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
-      Alert.alert(
-        remoteMessage.data.title,
-        remoteMessage.data.body,
-        [
-          {text: 'OK', onPress: () => navigation.navigate(remoteMessage.data.screen)},
-        ],
-        {cancelable: false},
-      );
-    });
-    messaging().onNotificationOpenedApp(remoteMessage => {
-        navigation.navigate(remoteMessage.data.screen);
-      });
-      messaging().setBackgroundMessageHandler(async remoteMessage => {
-        navigation.navigate(remoteMessage.data.screen);
-      });
-    return unsubscribe;
-   }, []);
+    useEffect(() => {
+        requestUserPermission();
+        const unsubscribe = messaging().onMessage(async remoteMessage => {
+          //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          console.log(remoteMessage.data);
+          if(remoteMessage.data.scheduling_id) {
+            Alert.alert(
+              remoteMessage.data.title,
+              remoteMessage.data.body,
+              [
+                {text: 'OK', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})},
+              ],
+              {cancelable: false},
+            );
+            console.log(remoteMessage.data.scheduling_id);
+          }
+          if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+            Alert.alert(
+              remoteMessage.data.title,
+              remoteMessage.data.body,
+              [
+                {text: 'OK', onPress: () => navigation.navigate(remoteMessage.data.screen)},
+              ],
+              {cancelable: false},
+            );
+            console.log(remoteMessage.data.scheduling_id);
+          }
+        });
+        messaging().onNotificationOpenedApp(async remoteMessage => {
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          if(remoteMessage.data.scheduling_id) {
+            navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})
+          }
+          if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+            navigation.navigate(remoteMessage.data.screen)
+          }
+          console.log(remoteMessage.data.scheduling_id);
+        });
+        messaging().setBackgroundMessageHandler(async remoteMessage => {
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          if(remoteMessage.data.scheduling_id) {
+            navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})
+          }
+          if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+            navigation.navigate(remoteMessage.data.screen)
+          }
+          console.log(remoteMessage.data.scheduling_id);
+        });
+        return unsubscribe;
+       }, []);
 
   requestUserPermission = async () => {
     const authStatus = await messaging().requestPermission();

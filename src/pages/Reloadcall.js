@@ -130,7 +130,6 @@ export default function Reloadcall({ navigation }) {
                                         </TouchableOpacity>
                                         <Text
                                             style={[styles.textStyle, { display: showText ? 'none' : 'flex' }]}>
-                                            Lorem Ipsum is simply dummy text of the printing..
                                         </Text>
                                     </View>
                             </View>
