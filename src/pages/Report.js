@@ -65,20 +65,30 @@ export default function Report({ navigation }) {
   }
   /** FIREBASE NOTIFICATION NAVIGATOR */
 
-  const requestFilePermission = async () => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-      );
-    } catch (err) {
-      console.warn(err);
+  useEffect(() => {
+    async function requestFilePermission() {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          {
+            title: "Permissão para gravar",
+            message: "O aplicativo precisa de permissão para gravar arquivos"
+          }
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log("Permitido");
+        } else {
+          console.log("Não Permitido");
+        }
+      } catch (err) {
+        console.warn(err);
+      }
     }
-  };
+    requestFilePermission();
+  }, []);
 
     
   const downloadImage = (document) => {
-    requestFilePermission();
     let file_URL = 'https://demo.denarius.digital/storage/'+ document;    
     const { config, fs } = RNFetchBlob;
     let PictureDir = fs.dirs.PictureDir;

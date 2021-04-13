@@ -8,6 +8,7 @@ import { format, parseISO } from "date-fns";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import api from '../services/api';
+import baseURL from './Baseurl';
 import messaging from '@react-native-firebase/messaging';
 
 // import { Container } from './styles';
@@ -138,7 +139,7 @@ export default function Historic({ navigation }) {
                                 paddingVertical: 10,
                                 borderRadius: 20 }}>
                                 <View style={styles.cardBody} >
-                                    <Image style={styles.cardAvatar} source={{uri: api + 'storage/' + scheduling.professional_image}}/>
+                                    <Image style={styles.cardAvatar} source={{uri: baseURL + 'storage/' + scheduling.professional_image}}/>
                                     <View style={styles.cardLeftSide} >
                                         <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
                                         <Text style={styles.cardName} >Dr(a). {scheduling.professional_name}</Text>

@@ -5,6 +5,7 @@ import { faArrowLeft, faCheckCircle, faPhoneSquareAlt, faVideo } from '@fortawes
 import { ScrollView } from 'react-native-gesture-handler';
 import { format, parseISO } from "date-fns";
 import api from '../services/api';
+import baseURL from './Baseurl';
 import axios from 'axios';
 import NetInfo from "@react-native-community/netinfo";
 
@@ -48,12 +49,14 @@ export default function Acceptcall({ navigation }) {
             meet_call: true, 
         };
 
+        
         const config = {
             method: "put",
-            url: api + `api/mobile/scheduling/meetCall`,
+            url: 'https://demo.denarius.digital/api/mobile/scheduling/meetCall',
             data: JSON.stringify(data),
             headers: { "content-type": "application/json" }
         };
+        console.log(config.url);
 
         if (connState.isConnected == true) {
             const responsed = await axios(config);
@@ -61,7 +64,7 @@ export default function Acceptcall({ navigation }) {
               setResponse(responsed);
               setCallLoading(false);
               setConfirmation(true);
-             
+              console.log(responsed);
               Alert.alert(
                 "Confirmação",
                 "A teleconsulta foi confirmada com sucesso! Clique no botão 'Atender Chamada' para iniciar o seu atendimento",
@@ -85,7 +88,7 @@ export default function Acceptcall({ navigation }) {
             const response = await api.get('api/mobile/scheduling/' + agendamento, { responseType: 'json' });
             setSchedulings(response);
             setLoading(!loading);
-            console.log(agendamento);
+            console.log(response.data);
         }
         loadSchedulings();
     }, []);
@@ -144,7 +147,7 @@ export default function Acceptcall({ navigation }) {
                                 paddingVertical: 10,
                                 borderRadius: 20 }}>
                                     <View style={styles.cardBody} >
-                                        <Image style={styles.cardAvatar} source={{uri: api + 'storage/' + schedulings.data.professional_image}}/>
+                                        <Image style={styles.cardAvatar} source={{uri: baseURL + 'storage/' + schedulings.data.professional_image}}/>
                                         <View style={styles.cardLeftSide} >
                                             <Text style={styles.cardName} >Dr(a). {schedulings.data.professional_name}</Text>
                                             <Text style={styles.cardTime} >{ format(parseISO(schedulings.data.date_scheduling), "dd/MM/yyyy") } às { schedulings.data.time_starting_booked }</Text>
@@ -176,7 +179,7 @@ export default function Acceptcall({ navigation }) {
                                                 </TouchableOpacity>
                                             : 
                                             <View> 
-                                                <TouchableOpacity  onPress={ () => handle(schedulings.data.id) } style={styles.primaryButton}>
+                                                <TouchableOpacity  onPress={ () => handle(agendamento) } style={styles.primaryButton}>
                                                 {callLoading ? <ActivityIndicator size="small" color="#0000ff" style={{alignItems: 'center', justifyContent: 'center'}}/> : <FontAwesomeIcon icon={ faVideo } size={20} color="#fff"/>}
                                                     <Text style={styles.buttonText}>Confirmar Chamada</Text>
                                                 </TouchableOpacity>

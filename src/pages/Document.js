@@ -15,10 +15,6 @@ import RNFetchBlob from 'rn-fetch-blob';
 
 export default function Document({ navigation }) {
 
-    function goToMenu() {
-       
-    }
-
     /** FIREBASE NOTIFICATION NAVIGATOR */
   useEffect(() => {
     requestUserPermission();
@@ -73,27 +69,29 @@ export default function Document({ navigation }) {
   }
   /** FIREBASE NOTIFICATION NAVIGATOR */
 
-  const requestFilePermission = async () => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-      );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log("You can use the camera");
-      } else {
-        console.log("Camera permission denied");
+  useEffect(() => {
+    async function requestFilePermission() {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          {
+            title: "Storage Permission",
+            message: "App needs access to memory to download the file "
+          }
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log("Permitido");
+        } else {
+          console.log("Não Permitido");
+        }
+      } catch (err) {
+        console.warn(err);
       }
-    } catch (err) {
-      console.warn(err);
     }
-  };
-
-  
-  
+    requestFilePermission();
+  }, []);
 
   const downloadImage = (document) => {
-    requestFilePermission();
     let file_URL = 'https://demo.denarius.digital/storage/'+ document;    
     const { config, fs } = RNFetchBlob;
     let PictureDir = fs.dirs.PictureDir;
@@ -124,19 +122,18 @@ export default function Document({ navigation }) {
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
     useEffect(() => {
-        async function loadDocuments() {
-            const user_id = await AsyncStorage.getItem('@storage_Key');
-            const response = await api.get('api/inklessapp/clinicdoc/customer/' + user_id, { responseType: 'json' });
-            //O response retorna como objeto no Inkless
-            //É preciso dar um cast para array, como é feito abaixo.
-            const arrResponse = []
-            Object.keys(response.data).forEach(key => arrResponse.push(response.data[key]));
-            //
-            setDocuments(arrResponse);
-            setLoading(!loading);
-            console.log(response);
-        }
-        loadDocuments();
+      async function loadDocuments() {
+          const user_id = await AsyncStorage.getItem('@storage_Key');
+          const response = await api.get('api/inklessapp/clinicdoc/customer/' + user_id, { responseType: 'json' });
+          //O response retorna como objeto no Inkless
+          //É preciso dar um cast para array, como é feito abaixo.
+          const arrResponse = []
+          Object.keys(response.data).forEach(key => arrResponse.push(response.data[key]));
+          //
+          setDocuments(arrResponse);
+          setLoading(!loading);
+      }
+      loadDocuments();
     }, []);
 
     const [user, setUser] = useState('');

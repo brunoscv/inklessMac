@@ -10,6 +10,7 @@ import * as geolib from 'geolib';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import api from '../services/api';
+import baseURL from './Baseurl';
 import axios from 'axios';
 import NetInfo from "@react-native-community/netinfo";
 import messaging from '@react-native-firebase/messaging';
@@ -219,7 +220,7 @@ export default function Reloadscheduling({ navigation }) {
                                 paddingVertical: 10,
                                 borderRadius: 20 }}>
                                 <View style={styles.cardBody} >
-                                <Image style={styles.cardAvatar} source={{uri: api + 'storage/' + scheduling.professional_image}}/>
+                                <Image style={styles.cardAvatar} source={{uri: baseURL + 'storage/' + scheduling.professional_image}}/>
                                     <View style={styles.cardLeftSide} >
                                         <Text style={styles.cardName} >Dr(a). {scheduling.professional_name}</Text>
                                         <Text style={styles.cardTime} >{ format(parseISO(scheduling.date_scheduling), "dd/MM/yyyy") } às { scheduling.time_starting_booked }</Text>

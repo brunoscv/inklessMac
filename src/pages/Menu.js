@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import messaging from '@react-native-firebase/messaging';
 
 import api from '../services/api';
+import baseURL from './Baseurl';
 import axios from 'axios';
 import userLogo from '../../assets/user.png';
 
@@ -127,7 +128,7 @@ export default function Menu({ navigation }) {
           {!user.image ? 
             <Image style={styles.cardAvatar} source={require('../../assets/user.png')}/>
             : 
-            <Image style={styles.cardAvatar} source={{uri: api + 'storage/'+ user.image}}/> 
+            <Image style={styles.cardAvatar} source={{uri: baseURL + 'storage/'+ user.image}}/> 
           }
         </View>
         <Text style={styles.nameText}>{user.name}</Text>

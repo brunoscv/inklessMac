@@ -10,6 +10,7 @@ import NetInfo from "@react-native-community/netinfo";
 import { format, parseISO } from "date-fns";
 
 import api from '../services/api';
+import baseURL from './Baseurl';
 import axios from 'axios';
 
 import { ScrollView } from 'react-native-gesture-handler';
@@ -195,7 +196,7 @@ export default function Users({ navigation }) {
                         {!user.image ? 
                             <Image style={styles.cardAvatar} source={require('../../assets/user.png')}/>
                             : 
-                            <Image style={styles.cardAvatar} source={{uri: api + 'storage/'+ user.image}}/> 
+                            <Image style={styles.cardAvatar} source={{uri: baseURL + 'storage/'+ user.image}}/> 
                         }
                         <View style={styles.cardLeftSide} >
                             <Text style={styles.cardName} >Nome: { user.name }</Text>

@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import messaging from '@react-native-firebase/messaging';
 
 import api from '../services/api';
 import axios from 'axios';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from "@react-native-community/netinfo";
 
 export default function Clinic({ navigation }) {
 
@@ -18,7 +21,7 @@ export default function Clinic({ navigation }) {
 
     const [notifications, setNotifications] = useState([]);
     const [notParse, setNotParse] = useState([]);
-
+    const agendamento = navigation.getParam('scheduling_id', '0');
     /** FIREBASE NOTIFICATION NAVIGATOR */
     useEffect(() => {
         requestUserPermission();
@@ -61,7 +64,56 @@ export default function Clinic({ navigation }) {
     }
   }
   /** FIREBASE NOTIFICATION NAVIGATOR */
-    
+    const [attendances, setAttendances] = useState([]);
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+    async function loadAttendances() {
+        const user_id = await AsyncStorage.getItem('@storage_Key');
+        const response = await api.get('api/mobile/messageapps/search/' + agendamento, { responseType: 'json' });
+        //O response retorna como objeto no Inkless
+        //É preciso dar um cast para array, como é feito abaixo.
+        const arrResponse = []
+        Object.keys(response.data.data).forEach(key => arrResponse.push(response.data.data[key]));
+        //
+        setAttendances(arrResponse);
+        setLoading(!loading);
+        console.log(arrResponse[0].body)
+    }
+    loadAttendances();
+  }, []);
+  const renderElements = (attendances) => {
+    if(attendances == '' || attendances == null) {
+      return (
+        <View style={{
+          flex: 1,
+          backgroundColor: '#fff', 
+          marginHorizontal: 10,
+          marginVertical: '30%',
+          paddingHorizontal: 14,
+          paddingVertical: 10,
+          borderRadius: 20,
+          alignItems: 'center', justifyContent: 'center'}}>
+          <Text style={{color: '#222', marginVertical: 10}}>Não há mensagens</Text>
+        </View>
+      );
+    } else {
+      return (
+        attendances.map(attendance => 
+          <View key={attendance.id} style={styles.content}> 
+                <View style={{ paddingVertical: 5}}>
+                    <Text style={{fontSize: 22, color: '#fff'}}>Atendimento</Text>
+                </View>
+                <View style={{paddingVertical: 5}}>
+                    <Image style={{width: 200, height:200, borderRadius: 200 / 2}} source={{uri: attendance.image}}/>
+                </View>
+                <View style={{paddingHorizontal: 20}}>
+                    <Text style={{fontSize: 16, color: '#fff', paddingVertical: 20}}>{attendance.body}</Text>
+                </View>
+          </View>   
+        )
+      )
+    }
+  }
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" style={styles.statusBar}/>
@@ -73,17 +125,25 @@ export default function Clinic({ navigation }) {
             
                 <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Voltar</Text></View>
             </View>
-            <View style={styles.content}>
-                <View style={{ paddingVertical: 5}}>
-                    <Text style={{fontSize: 22, color: '#fff'}}>Atendimento no Consultório</Text>
-                </View>
-                <View style={{paddingVertical: 5}}>
-                    <Image style={{width: 200, height:200, borderRadius: 200 / 2}} source={{uri: api + 'storage/img/111454202009085f5791ded23d3.jpeg'}}/>
-                </View>
-                <View style={{paddingHorizontal: 20}}>
-                    <Text style={{fontSize: 16, color: '#fff', paddingVertical: 20}}>"Olá! sou o Dr(a) PHD George Macedo. Por favor, dirija-se ao CONSULTÓRIO 1 - TÉRREO para seu atendimento.</Text>
-                </View>
-            </View>
+            {!loading ?
+                  renderElements(attendances)
+                :
+                  <View style={{
+                    flex: 1,
+                    backgroundColor: '#fff', 
+                    marginHorizontal: 10,
+                    marginVertical: '30%',
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    borderRadius: 20,
+                    alignItems: 'center', justifyContent: 'center'}}>
+                    <ActivityIndicator size="large" color="#0000ff"/>
+                    <Text style={{color: '#222', marginVertical: 10}}>Carregando ...</Text>
+                  </View>
+                  
+                }
+                
+           
             
         </View>
     )
