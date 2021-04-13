@@ -2,12 +2,12 @@ import { createAppContainer, createSwitchNavigator} from 'react-navigation';
 
 import Menu from './pages/Menu';
 import Login from './pages/Login';
+import Users from './pages/Users';
 import Scheduling from './pages/Scheduling';
 import Reloadscheduling from './pages/Reloadscheduling';
 import Historic from './pages/Historic';
 import Report from './pages/Report';
 import Document from './pages/Document';
-import Users from './pages/Users';
 import Video from './pages/Video';
 import Attendance from './pages/Attendance';
 import Clinic from './pages/Clinic';

@@ -43,7 +43,7 @@ export default function Reloadcall({ navigation }) {
 
     useEffect(() => {
         async function loadSchedulings() {
-            const response = await api.get('/mobile/scheduling/' + agendamento, { responseType: 'json' });
+            const response = await api.get('api/mobile/scheduling/' + agendamento, { responseType: 'json' });
             console.log(response.data.session_token);
             setSchedulings(response);
             setLoading(!loading);
@@ -53,7 +53,7 @@ export default function Reloadcall({ navigation }) {
 
     async function loadVideoCall() {
         setCallLoading(true);
-        const response = await api.get('/mobile/scheduling/' + agendamento, { responseType: 'json' });
+        const response = await api.get('api/mobile/scheduling/' + agendamento, { responseType: 'json' });
         if(response.status == 200) {
             setCallLoading(false);
             navigation.navigate('Video', { apiKey: `${response.data.apiKey}`, sessionId: `${response.data.session_id}`, tokenId: `${response.data.session_token}` });
@@ -68,14 +68,15 @@ export default function Reloadcall({ navigation }) {
         return () => clearInterval(interval);
     }, []);
 
-    const [username, setUsername] = useState('');
+    const [user, setUser] = useState('');
     useEffect(() => {
-        async function loadName() {
-            const user_id = await AsyncStorage.getItem('@storage_Key');
-            const response = await api.get('/mobile/checkinid/' + user_id, { responseType: 'json' });
-            setUsername(response.data.name);
-        }
-        loadName();
+      async function loadCustomer() {
+        const user_id = await AsyncStorage.getItem('@storage_Key');
+        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
+        setUser(response.data.data);
+        
+      }
+      loadCustomer();
     }, []);
 
     return (
@@ -98,7 +99,7 @@ export default function Reloadcall({ navigation }) {
                 borderTopLeftRadius: 30, 
                 borderTopRightRadius: 30}}>
                     <View style={styles.titleBlock}>
-                        <Text style={styles.subnameBlock}>{username}</Text>
+                        <Text style={styles.subnameBlock}>{user.name}</Text>
                     </View>
                     <View>
                         <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os check-in's</Text>
@@ -113,7 +114,7 @@ export default function Reloadcall({ navigation }) {
                                 paddingVertical: 10,
                                 borderRadius: 20 }}>
                                     <View style={styles.cardBody} >
-                                        <Image style={styles.cardAvatar} source={{uri: 'https://demo.inkless.digital/storage/' + schedulings.data.professional_image}}/>
+                                        <Image style={styles.cardAvatar} source={{uri: api + 'storage/' + schedulings.data.professional_image}}/>
                                         <View style={styles.cardLeftSide} >
                                             <Text style={styles.cardName} >Dr(a). {schedulings.data.professional_name}</Text>
                                             <Text style={styles.cardTime} >{ format(parseISO(schedulings.data.date_scheduling), "dd/MM/yyyy") } às { schedulings.data.time_starting_booked }</Text>

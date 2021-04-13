@@ -1,356 +1,271 @@
-import React from 'react';
-import { View, Text, StyleSheet, StatusBar, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, ActivityIndicator, PermissionsAndroid, Alert } from 'react-native';
+import messaging from '@react-native-firebase/messaging';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faArrowLeft, faFileAlt, faUserCircle, faCheckCircle, faPhoneSquareAlt } from '@fortawesome/free-solid-svg-icons';
+import { faAngleRight, faFileAlt, faArrowLeft, faDownload } from '@fortawesome/free-solid-svg-icons';
+import Moment from 'moment';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TextInputMask } from 'react-native-masked-text';
+import NetInfo from "@react-native-community/netinfo";
+import { format, parseISO } from "date-fns";
+
+import api from '../services/api';
+import axios from 'axios';
+
 import { ScrollView } from 'react-native-gesture-handler';
 
 // import { Container } from './styles';
 
 export default function Users({ navigation }) {
+    const [connState, setConnState] = useState(0);
+    useEffect(() => {
+        NetInfo.fetch().then(state => {
+          setConnState(state);
+        });
+    
+        const unsubscribe = NetInfo.addEventListener(state => {
+          setConnState(state);
+        });
+    
+        return () => {
+          unsubscribe();
+        };
+    }, []);
 
-    async function goToMenu() {
-        //const response = await api.get()
-        //await AsyncStorage.setItem('user', 30059);
-        navigation.navigate('Menu');
+    /** FIREBASE NOTIFICATION NAVIGATOR */
+    useEffect(() => {
+        requestUserPermission();
+        const unsubscribe = messaging().onMessage(async remoteMessage => {
+          //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          console.log(remoteMessage.data);
+          if(remoteMessage.data.scheduling_id) {
+            Alert.alert(
+              remoteMessage.data.title,
+              remoteMessage.data.body,
+              [
+                {text: 'FECHAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})},
+              ],
+              {cancelable: false},
+            );
+            console.log(remoteMessage.data.scheduling_id);
+          }
+          if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+            Alert.alert(
+              remoteMessage.data.title,
+              remoteMessage.data.body,
+              [
+                {text: 'FECHAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
+              ],
+              {cancelable: false},
+            );
+            console.log(remoteMessage.data.scheduling_id);
+          }
+        });
+        messaging().onNotificationOpenedApp(async remoteMessage => {
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          if(remoteMessage.data.scheduling_id) {
+            navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})
+          }
+          if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+            navigation.navigate(remoteMessage.data.screen)
+          }
+          console.log(remoteMessage.data.scheduling_id);
+        });
+        messaging().setBackgroundMessageHandler(async remoteMessage => {
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          if(remoteMessage.data.scheduling_id) {
+            navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})
+          }
+          if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+            navigation.navigate(remoteMessage.data.screen)
+          }
+          console.log(remoteMessage.data.scheduling_id);
+        });
+        return unsubscribe;
+       }, []);
+
+  requestUserPermission = async () => {
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+    if (enabled) {
+      getFcmToken();
+    }
+  }
+
+  getFcmToken = async () => {
+    const fcmToken = await messaging().getToken();
+  }
+  /** FIREBASE NOTIFICATION NAVIGATOR */
+
+    async function verifyLocationPermission() {
+        try {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+          );
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            setHasLocationPermission(true);
+          } else {
+            setHasLocationPermission(false);
+          }
+        } catch (err) {
+          console.warn(err);
+        }
+    }
+
+    const storeData = async (value) => {
+        try {
+            const varr = await AsyncStorage.setItem('@storage_Key', value);
+        } catch (e) {
+          // saving error
+        }
+    }
+
+    getMyStringValue = async () => {
+        try {
+          const logged = await AsyncStorage.getItem('@storage_Key');
+          if (logged) {
+            navigation.navigate('Menu');
+          }
+        } catch(e) {}
+    }
+
+    const [response, setResponse] = useState([]);
+    async function handleLogin(user_id) {
+       
+        const response = await api.get('api/customer/'+ user_id, { responseType: 'json' });
+        console.log(response.data['data']);
+        if (response.data['data'] > '0') {
+           
+            const fcmToken = await messaging().getToken();
+            setLoading(true);
+            if (connState.isConnected == true) {
+            
+                const responseSec = await api.put('api/inklessapp/update/customer', { id: user_id, device_id: fcmToken, token_id: fcmToken });
+                
+                if (responseSec) {
+                    setResponse(responseSec);
+                    setLoading(false);
+                    storeData(JSON.stringify(user_id));
+                    navigation.navigate('Menu');
+                } else {
+                    Alert.alert("Conexão", "Verifique os dados digitados e tente novamente!");
+                }
+            } else {
+                setLoading(false);
+                Alert.alert("Conexão", "Detectamos que você não possui conexão ativa com a Internet. Por favor tente novamente!");
+            }
+
+        } else {
+            Alert.alert("Conexão", "Verifique os dados digitados e tente novamente!");
+        }
+    }
+
+    const [ loginUsers, setLoginUsers ] = useState();
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+        async function loadUsers() {
+            const unmaskedCpf = navigation.getParam('cpf', 'Anonimo');
+            const unmaskedNasc = navigation.getParam('birth', 'Anonimo');
+            const response = await api.post('api/mobile/searchcpfbirth', { cpf: unmaskedCpf, birth: unmaskedNasc, responseType: 'json' });
+            const arrResponse = []
+            Object.keys(response.data.data).forEach(key => arrResponse.push(response.data.data[key]));
+            setLoginUsers(arrResponse);
+            setLoading(!loading);
+            console.log(arrResponse);
+        }
+        loadUsers();
+    }, []);
+
+    const renderElements = (loginUsers) => {
+        return (
+            loginUsers.map(user => 
+                <View key={user.id} style={{ 
+                    backgroundColor: '#fff', 
+                    marginHorizontal: 10,
+                    marginVertical: 4,
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    borderRadius: 20 }}>
+                        
+                    <View style={styles.cardBody} >
+                        {!user.image ? 
+                            <Image style={styles.cardAvatar} source={require('../../assets/user.png')}/>
+                            : 
+                            <Image style={styles.cardAvatar} source={{uri: api + 'storage/'+ user.image}}/> 
+                        }
+                        <View style={styles.cardLeftSide} >
+                            <Text style={styles.cardName} >Nome: { user.name }</Text>
+                            <Text style={styles.cardTime} >CPF: { user.cpf }</Text>
+                            <Text style={styles.cardTime} >Data de Nasc.:{ format(parseISO(user.birth), "dd/MM/yyyy") }</Text>
+                            <Text style={styles.cardHospital}>HOSPITAL GASTROVITA</Text>
+                        </View>
+                    </View>
+                    <View style={styles.cardFooter}>
+                        <TouchableOpacity onPress={ () => handleLogin(user.id) } style={styles.callButton}>
+                            <View style={{flexDirection: 'row', justifyContent:'center', alignItems: 'center'}}>
+                                {/* <FontAwesomeIcon icon={ faDownload } size={15} color="#fff"/> */}
+                                <Text style={styles.buttonText}>Entrar</Text>
+                            </View>
+                        </TouchableOpacity> 
+                    </View>
+                </View>   
+            )
+        )
     }
 
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" style={styles.statusBar}/>
-            <View style={styles.actionsBlock}>
-                
-                <View style={styles.backBlock}>
-                   <TouchableOpacity onPress={goToMenu} style={styles.navButton}>
+
+            <View style={{backgroundColor: '#004ba0'}}>
+                <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>
+                    <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
                         <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
                     </TouchableOpacity>
-                    <View style={styles.rightBlock}>
-                        <FontAwesomeIcon icon={ faUserCircle } size={25} color="#fff"/>
-                    </View>
-                </View>
                 
-            </View>
-
-            <View style={styles.titleBlock}>
-                <Text style={styles.nameBlock}>{"Laudos de,"}</Text>
-                <Text style={styles.subnameBlock}>{"José Paciente Teste"}</Text>
-            </View>
-
-            <View style={{paddingVertical: 20, paddingHorizontal: 10}}>
-                <Text>{"Todos Laudos"}</Text>
+                    <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Seus Usuários</Text></View>
+                </View>
             </View>
 
             <ScrollView style={{
                 flex: 1, 
-                backgroundColor: "#cfd8dc", 
+                backgroundColor: "#f5f5f5", 
                 borderTopLeftRadius: 30, 
-                borderTopRightRadius: 30,
-                paddingVertical: 2 }}>
-                
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
-                        </View>
+                borderTopRightRadius: 30}}>
+                    <View style={styles.titleBlock}>
+                        <Text style={styles.subnameBlock}>ESCOLHA UM USUÁRIO PARA ENTRAR</Text>
                     </View>
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
-                        </View>
+                    <View>
+                        <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os usuários</Text>
                     </View>
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
+                    {!loading ?
+                         renderElements(loginUsers) 
+                        
+                         : <View style={{
+                            flex: 1,
+                            backgroundColor: '#fff', 
+                            marginHorizontal: 10,
+                            marginVertical: '30%',
+                            paddingHorizontal: 14,
+                            paddingVertical: 10,
+                            borderRadius: 20,
+                            alignItems: 'center', justifyContent: 'center'}}>
+                            <ActivityIndicator size="large" color="#0000ff"/>
+                            <Text style={{color: '#222', marginVertical: 10}}>Carregando ...</Text>
                         </View>
-                    </View>
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
-                        </View>
-                    </View>
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
-                        </View>
-                    </View>
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
-                        </View>
-                    </View>
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >05/11/2020 às 8:00 PM</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >05/11/2020 às 8:00 PM</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >05/11/2020 às 8:00 PM</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >05/11/2020 às 8:00 PM</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >05/11/2020 às 8:00 PM</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >05/11/2020 às 8:00 PM</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >05/11/2020 às 8:00 PM</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >05/11/2020 às 8:00 PM</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    <View style={{ 
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: 4,
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20 }}>
-                        <View style={styles.cardBody} >
-                            <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                            </View>
-                            <View style={styles.cardLeftSide} >
-                                <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                <Text style={styles.cardName} >Dr. Maximo Henrique</Text>
-                                <Text style={styles.cardTime} >05/11/2020 às 8:00 PM</Text>
-                                <Text style={styles.cardTime} >1-receituário-16092720200829</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    
-   
-
-                    
-
-                    
-         
-               
+                    } 
             </ScrollView>
         </View>
     );
 }
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#cfd8dc',
+        backgroundColor: '#f5f5f5',
     },
     statusBar: {
         backgroundColor: '#1976d2',
@@ -361,7 +276,6 @@ const styles = StyleSheet.create({
     },
     backBlock: {
         backgroundColor: '#1976d2',
-        padding: 16,
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
@@ -369,12 +283,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     titleBlock: {
-        backgroundColor: '#1976d2',
-        padding: 16,
-        height: 130,
-        position: "relative",
-        borderBottomLeftRadius: 60,
-        borderBottomRightRadius: 60
+        backgroundColor: '#004ba0',
+        padding: 15,
+        borderBottomLeftRadius: 15,
+        borderBottomRightRadius: 15
     },
     nameBlock: {
         color: '#fff',
@@ -382,13 +294,16 @@ const styles = StyleSheet.create({
     },
     subnameBlock: {
         color: '#fff',
-        fontSize: 30,
+        fontSize: 13,
     },
     cardAvatar: {
         height: 60,
         width: 60,
         backgroundColor: 'gray',
-        borderRadius: 60,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginVertical: 20
     },
     cardBody: {
         flexDirection: 'row',
@@ -406,11 +321,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         flex: 1
     },  
-    cardHospital: {
-        color: '#1976d2',
-        fontSize: 18,
-        fontWeight: 'bold'
-    },
     cardName: {
         color: '#222',
         fontSize: 14,
@@ -424,7 +334,7 @@ const styles = StyleSheet.create({
     },
     cardAddress: {
         color: 'gray',
-        fontSize: 14,
+        fontSize: 15,
         fontWeight: '500',
         marginTop: 5
     },
@@ -437,21 +347,47 @@ const styles = StyleSheet.create({
 
     },
     checkinButton: {
-        backgroundColor: '#388e3c',
+        backgroundColor: '#1976d2',
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius:4,
-        margin: 5,
-        padding: 5,
-        flexDirection: 'row'
+        margin: 2,
+        padding: 4,
     },
     callButton: {
         backgroundColor: '#388e3c',
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius:4,
-        margin: 5,
-        padding: 5,
+        margin: 2,
+        padding: 4,
+    },
+    dangerButton: {
+        backgroundColor: '#d32f2f',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius:4,
+        margin: 2,
+        padding: 4,
+        flexDirection: 'row'
+    },
+    successButton: {
+        backgroundColor: '#388e3c',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius:4,
+        margin: 2,
+        padding: 4,
+        flexDirection: 'row'
+    },
+    primaryButton: {
+        backgroundColor: '#1976d2',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius:4,
+        margin: 2,
+        padding: 4,
+        flexDirection: 'row'
     },
     navButton: {
 
@@ -459,7 +395,7 @@ const styles = StyleSheet.create({
     buttonText: {
         color:'#fff',
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: 14,
         marginHorizontal: 10
     }
 });

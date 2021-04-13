@@ -5,6 +5,9 @@ import { faClock, faBookReader, faFile, faFolder, faSignOutAlt, faVideo } from '
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import messaging from '@react-native-firebase/messaging';
 
+import api from '../services/api';
+import axios from 'axios';
+import userLogo from '../../assets/user.png';
 
 export default function Menu({ navigation }) {
   const [scheduling, setScheduling] = useState(0);
@@ -23,7 +26,7 @@ export default function Menu({ navigation }) {
           remoteMessage.data.title,
           remoteMessage.data.body,
           [
-            {text: 'OK', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})},
+            {text: 'FECHAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})},
           ],
           {cancelable: false},
         );
@@ -34,7 +37,7 @@ export default function Menu({ navigation }) {
           remoteMessage.data.title,
           remoteMessage.data.body,
           [
-            {text: 'OK', onPress: () => navigation.navigate(remoteMessage.data.screen)},
+            {text: 'FECHAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
           ],
           {cancelable: false},
         );
@@ -105,13 +108,30 @@ export default function Menu({ navigation }) {
 
   /** FIREBASE NOTIFICATION NAVIGATOR */
 
+    const [user, setUser] = useState('');
+    useEffect(() => {
+      async function loadCustomer() {
+        const user_id = await AsyncStorage.getItem('@storage_Key');
+        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
+        setUser(response.data.data);
+        
+      }
+      loadCustomer();
+    }, []);
+
   return (
       <View style={styles.container}>
       <View>
         <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row', justifyContent: 'space-between'} }>
-          <Text style={styles.menuText}>Bem vindo(a)</Text>
-          <Image style={styles.cardAvatar} source={{uri: 'https://demo.inkless.digital/storage/img/152013202009085f57cb5d778b8.png'}}/> 
+          <Text style={styles.menuText}>Bem vindo(a):</Text>
+          {!user.image ? 
+            <Image style={styles.cardAvatar} source={require('../../assets/user.png')}/>
+            : 
+            <Image style={styles.cardAvatar} source={{uri: api + 'storage/'+ user.image}}/> 
+          }
         </View>
+        <Text style={styles.nameText}>{user.name}</Text>
+        
       </View>
       <View style={styles.content}>
         <View style={styles.firstrow}>
@@ -210,6 +230,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     paddingVertical: 10,
     paddingHorizontal: 10
+  },
+  nameText: {
+    color:'#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+    paddingVertical: 2,
+    paddingHorizontal: 20
   },
   exitText: {
     color:'#fff',

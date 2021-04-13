@@ -50,7 +50,7 @@ export default function Login({ navigation }) {
             Alert.alert(
                 remoteMessage.data.title,
                 remoteMessage.data.body, [
-                    { text: 'OK', onPress: () => navigation.navigate(remoteMessage.data.screen) },
+                    { text: 'FECHAR', onPress: () => navigation.navigate(remoteMessage.data.screen) },
                 ], { cancelable: false },
             );
         });
@@ -114,25 +114,23 @@ export default function Login({ navigation }) {
     async function handleLogin() {
         const unmaskedNasc = Moment(nascUnmaskedField.getRawValue()).format('YYYY-MM-DD');
         const unmaskedCpf = cpfUnmaskedField.getRawValue();
-        const response = await api.post('/mobile/searchcpfbirth', { cpf: unmaskedCpf, birth: unmaskedNasc });
+        const response = await api.post('api/mobile/searchcpfbirth', { cpf: unmaskedCpf, birth: unmaskedNasc, responseType: 'json' });
        
-        //console.log(response.data['data'][0]['id']);
+        console.log(unmaskedNasc);
+        console.log(unmaskedCpf);
         if (response.data['data'] > '0') {
            
             const fcmToken = await messaging().getToken();
             setLoading(true);
             if (connState.isConnected == true) {
             
-                const responseSec = await api.put('/inklessapp/update/customer', { id: response.data['data'][0]['id'], device_id: fcmToken, token_id: fcmToken });
-                
-                if (responseSec) {
-                    setResponse(responseSec);
+                if (response) {
                     setLoading(false);
-                    storeData(JSON.stringify(response.data['data'][0]['id']));
-                    navigation.navigate('Menu');
+                    navigation.navigate('Users', { cpf: unmaskedCpf, birth: unmaskedNasc });
                 } else {
                     Alert.alert("Conexão", "Verifique os dados digitados e tente novamente!");
                 }
+
             } else {
                 setLoading(false);
                 Alert.alert("Conexão", "Detectamos que você não possui conexão ativa com a Internet. Por favor tente novamente!");
@@ -142,28 +140,6 @@ export default function Login({ navigation }) {
             Alert.alert("Conexão", "Verifique os dados digitados e tente novamente!");
         }
     }
-    // async function handleSubmit() {
-    //     //const user_id = id;
-    //     console.log(userId);
-    //     const fcmToken = await messaging().getToken();
-    //     setLoading(true);
-    //     if (connState.isConnected == true) {
-           
-    //         const response = await api.put('/inklessapp/update/customer', { id: userId, device_id: fcmToken, token_id: fcmToken });
-    //         console.log(response);
-    //         if (response) {
-    //             setResponse(response);
-    //             setLoading(false);
-               
-    //             navigation.navigate('Menu');
-    //         } else {
-    //             Alert.alert("Conexão", "Verifique os dados digitados e tente novamente!");
-    //         }
-    //     } else {
-    //         setLoading(false);
-    //         Alert.alert("Conexão", "Detectamos que você não possui conexão ativa com a Internet. Por favor tente novamente!");
-    //     }
-    // }
 
     return (
         <KeyboardAvoidingView enabled={Platform.OS == 'ios'} behavior="padding" style={styles.container}>

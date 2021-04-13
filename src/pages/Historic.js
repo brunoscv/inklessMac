@@ -29,7 +29,7 @@ export default function Historic({ navigation }) {
         remoteMessage.data.title,
         remoteMessage.data.body,
         [
-          {text: 'OK', onPress: () => navigation.navigate(remoteMessage.data.screen)},
+          {text: 'FECHAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
         ],
         {cancelable: false},
       );
@@ -80,7 +80,7 @@ export default function Historic({ navigation }) {
     useEffect(() => {
         async function loadSchedulings() {
             const user_id = await AsyncStorage.getItem('@storage_Key');
-            const response = await api.get('/mobile/checkinidall/' + user_id, { responseType: 'json' });
+            const response = await api.get('api/mobile/checkinidall/' + user_id, { responseType: 'json' });
             //O response retorna como objeto no Inkless
             //É preciso dar um cast para array, como é feito abaixo.
             const arrResponse = []
@@ -91,6 +91,17 @@ export default function Historic({ navigation }) {
             setUsername(response.data.name);
         }
         loadSchedulings();
+    }, []);
+
+    const [user, setUser] = useState('');
+    useEffect(() => {
+      async function loadCustomer() {
+        const user_id = await AsyncStorage.getItem('@storage_Key');
+        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
+        setUser(response.data.data);
+        
+      }
+      loadCustomer();
     }, []);
 
     return (
@@ -112,7 +123,7 @@ export default function Historic({ navigation }) {
                 position: 'relative',
                 backgroundColor: "#eee"}}>
                     <View style={styles.titleBlock}>
-                        <Text style={styles.subnameBlock}>{username}</Text>
+                        <Text style={styles.subnameBlock}>{user.name}</Text>
                     </View>
                     <View>
                         <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os agendamentos</Text>
@@ -127,7 +138,7 @@ export default function Historic({ navigation }) {
                                 paddingVertical: 10,
                                 borderRadius: 20 }}>
                                 <View style={styles.cardBody} >
-                                    <Image style={styles.cardAvatar} source={{uri: 'https://demo.inkless.digital/storage/' + scheduling.professional_image}}/>
+                                    <Image style={styles.cardAvatar} source={{uri: api + 'storage/' + scheduling.professional_image}}/>
                                     <View style={styles.cardLeftSide} >
                                         <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
                                         <Text style={styles.cardName} >Dr(a). {scheduling.professional_name}</Text>

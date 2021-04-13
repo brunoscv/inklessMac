@@ -5,6 +5,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import messaging from '@react-native-firebase/messaging';
 
+import api from '../services/api';
+import axios from 'axios';
+
 export default function Clinic({ navigation }) {
 
     function goToMenu() {
@@ -75,7 +78,7 @@ export default function Clinic({ navigation }) {
                     <Text style={{fontSize: 22, color: '#fff'}}>Atendimento no Consultório</Text>
                 </View>
                 <View style={{paddingVertical: 5}}>
-                    <Image style={{width: 200, height:200, borderRadius: 200 / 2}} source={{uri: 'https://demo.inkless.digital/storage/img/111454202009085f5791ded23d3.jpeg'}}/>
+                    <Image style={{width: 200, height:200, borderRadius: 200 / 2}} source={{uri: api + 'storage/img/111454202009085f5791ded23d3.jpeg'}}/>
                 </View>
                 <View style={{paddingHorizontal: 20}}>
                     <Text style={{fontSize: 16, color: '#fff', paddingVertical: 20}}>"Olá! sou o Dr(a) PHD George Macedo. Por favor, dirija-se ao CONSULTÓRIO 1 - TÉRREO para seu atendimento.</Text>

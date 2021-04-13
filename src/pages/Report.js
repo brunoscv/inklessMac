@@ -14,6 +14,11 @@ import RNFetchBlob from 'rn-fetch-blob';
 
 export default function Report({ navigation }) {
 
+  const [isDownloaded, setIsDownloaded] = useState('');
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState('');
+  const [user, setUser] = useState('');
+
   /** FIREBASE NOTIFICATION NAVIGATOR */
   useEffect(() => {
     requestUserPermission();
@@ -23,7 +28,7 @@ export default function Report({ navigation }) {
         remoteMessage.data.title,
         remoteMessage.data.body,
         [
-          {text: 'OK', onPress: () => navigation.navigate(remoteMessage.data.screen)},
+          {text: 'FECHAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
         ],
         {cancelable: false},
       );
@@ -71,84 +76,111 @@ export default function Report({ navigation }) {
     }
   };
 
-  
-  //const REMOTE_IMAGE_PATH = 'https://demo.inkless.digital/storage/img/152217202009085f57cbd9f3f45.jpeg';
+    
   const downloadImage = (document) => {
-    // Main function to download the image
     requestFilePermission();
-    // To add the time suffix in filename
-    let date = new Date();
-    // Image URL which we want to download
-    let image_URL = 'https://demo.inkless.digital/storage/'+ document;    
-    // Getting the extention of the file
-    let ext = getExtention(image_URL);
-    ext = '.' + ext[0];
-    // Get config and fs from RNFetchBlob
-    // config: To pass the downloading related options
-    // fs: Directory path where we want our image to download
+    let file_URL = 'https://demo.denarius.digital/storage/'+ document;    
     const { config, fs } = RNFetchBlob;
     let PictureDir = fs.dirs.PictureDir;
     let options = {
       fileCache: true,
       addAndroidDownloads: {
-        // Related to the Android only
         useDownloadManager: true,
         notification: true,
-        path:
-          PictureDir +
-          '/arquivo_' + 
-          Math.floor(date.getTime() + date.getSeconds() / 2) +
-          ext,
+        path: PictureDir + '/' + document,
         description: 'Arquivo',
       },
     };
     config(options)
-      .fetch('GET', image_URL)
-      .then(res => {
-        // Showing alert after successful downloading
-        Alert.alert(
-          "",
-          "Seu download foi realizado com sucesso!",
-          [
-            {text: 'OK'},
-          ],
-          {cancelable: false},
-        );
-      });
+    .fetch('GET', file_URL)
+    .then(res => {
+      console.log('res -> ', JSON.stringify(res));
+      Alert.alert(
+        "CONFIRMAÇÃO",
+        "Seu download foi realizado com sucesso!",
+        [
+          {text: 'VER ARQUIVO'},
+        ],
+        {cancelable: false},
+      );
+    });
   };
 
-  const getExtention = filename => {
-    // To get the file extension
-    return /[.]/.exec(filename) ? /[^.]+$/.exec(filename) : undefined;
-  };
 
-    const [reports, setReports] = useState([]);
-    const [loading, setLoading] = useState(true);
+   
     useEffect(() => {
-        async function loadReports() {
-            const user_id = 30059;
-            const response = await api.get('/inklessapp/report/customer/' + user_id, { responseType: 'json' });
-            //O response retorna como objeto no Inkless
-            //É preciso dar um cast para array, como é feito abaixo.
-            const arrResponse = []
-            Object.keys(response.data).forEach(key => arrResponse.push(response.data[key]));
-            //
-            setReports(arrResponse);
-            setLoading(!loading);
-        }
-        loadReports();
+      async function loadReports() {
+          const user_id = await AsyncStorage.getItem('@storage_Key');
+          const response = await api.get('api/inklessapp/report/customer/' + user_id, { responseType: 'json' });
+          //O response retorna como objeto no Inkless
+          //É preciso dar um cast para array, como é feito abaixo.
+          const arrResponse = []
+          Object.keys(response.data).forEach(key => arrResponse.push(response.data[key]));
+          setReports(arrResponse);
+          setLoading(false);
+      }
+      loadReports();
     }, []);
 
-    const [username, setUsername] = useState('');
+   
     useEffect(() => {
-        async function loadName() {
-            const user_id = await AsyncStorage.getItem('@storage_Key');
-            const response = await api.get('/mobile/checkinid/' + user_id, { responseType: 'json' });
-            setUsername(response.data.name);
-        }
-        loadName();
+      async function loadCustomer() {
+        const user_id = await AsyncStorage.getItem('@storage_Key');
+        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
+        setUser(response.data.data); 
+      }
+      loadCustomer();
     }, []);
     
+    const renderElements = (reports) => {
+      if(reports[0] == '400') {
+        return (
+          <View style={{
+            flex: 1,
+            backgroundColor: '#fff', 
+            marginHorizontal: 10,
+            marginVertical: '30%',
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderRadius: 20,
+            alignItems: 'center', justifyContent: 'center'}}>
+            <Text style={{color: '#222', marginVertical: 10}}>{reports[1]}</Text>
+          </View>
+        );
+      } else {
+        return (
+          reports.map(report => 
+            <View key={report.id} style={{ 
+              backgroundColor: '#fff', 
+              marginHorizontal: 10,
+              marginVertical: 4,
+              paddingHorizontal: 14,
+              paddingVertical: 10,
+              borderRadius: 20 }}>
+                    
+              <View style={styles.cardBody} >
+                  <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
+                      <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
+                  </View>
+                  <View style={styles.cardLeftSide} >
+                      <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
+                      <Text style={styles.cardName} > Arquivo: { report.procedure }</Text>
+                      <Text style={styles.cardTime} >{ format(parseISO(report.date_requisition), "dd/MM/yyyy ' às ' HH:mm") }</Text>
+                  </View>
+              </View>
+              <View style={styles.cardFooter}>
+                  <TouchableOpacity onPress={ () => downloadImage(report.image) } style={styles.callButton}>
+                      <View style={{flexDirection: 'row', justifyContent:'center', alignItems: 'center'}}>
+                          <FontAwesomeIcon icon={ faDownload } size={15} color="#fff"/>
+                          <Text style={styles.buttonText}>Baixar</Text>
+                      </View>
+                  </TouchableOpacity> 
+              </View>
+            </View>   
+          )
+        )
+      }
+    }
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" style={styles.statusBar}/>
@@ -163,59 +195,33 @@ export default function Report({ navigation }) {
             </View>
 
             <ScrollView style={{
-                flex: 1, 
-                backgroundColor: "#f5f5f5", 
-                borderTopLeftRadius: 30, 
-                borderTopRightRadius: 30}}>
-                    <View style={styles.titleBlock}>
-                        <Text style={styles.subnameBlock}>{username}</Text>
-                    </View>
-                    <View>
-                        <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os laudos</Text>
-                    </View>
-                    {!loading ?
-                        reports.map(report => 
-                            <View key={report.id} style={{ 
-                                backgroundColor: '#fff', 
-                                marginHorizontal: 10,
-                                marginVertical: 4,
-                                paddingHorizontal: 14,
-                                paddingVertical: 10,
-                                borderRadius: 20 }}>
-                                    
-                                <View style={styles.cardBody} >
-                                    <View style={{backgroundColor: '#1976d2', width: 60, height: 60, alignItems: 'center', justifyContent: 'center', borderRadius: 60}} >
-                                        <FontAwesomeIcon icon={ faFileAlt } size={40} color="#fff"/>
-                                    </View>
-                                    <View style={styles.cardLeftSide} >
-                                        <Text style={styles.cardHospital} >HOSPITAL GASTROVITA</Text>
-                                        <Text style={styles.cardName} > Arquivo: { report.procedure }</Text>
-                                        <Text style={styles.cardTime} >{ format(parseISO(report.date_requisition), "dd/MM/yyyy ' às ' HH:mm") }</Text>
-                                    </View>
-                                </View>
-                                <View style={styles.cardFooter}>
-                                    <TouchableOpacity onPress={ () => downloadImage(report.image) } style={styles.callButton}>
-                                        <View style={{flexDirection: 'row', justifyContent:'center', alignItems: 'center'}}>
-                                            <FontAwesomeIcon icon={ faDownload } size={15} color="#fff"/>
-                                            <Text style={styles.buttonText}>Baixar</Text>
-                                        </View>
-                                    </TouchableOpacity> 
-                                </View>
-                            </View>   
-                    ) : <View style={{
-                        flex: 1,
-                        backgroundColor: '#fff', 
-                        marginHorizontal: 10,
-                        marginVertical: '30%',
-                        paddingHorizontal: 14,
-                        paddingVertical: 10,
-                        borderRadius: 20,
-                        alignItems: 'center', justifyContent: 'center'}}>
-                        <ActivityIndicator size="large" color="#0000ff"/>
-                        <Text style={{color: '#222', marginVertical: 10}}>Carregando ...</Text>
-                    </View>
-            }
-               
+              flex: 1, 
+              backgroundColor: "#f5f5f5", 
+              borderTopLeftRadius: 30, 
+              borderTopRightRadius: 30}}>
+                <View style={styles.titleBlock}>
+                    <Text style={styles.subnameBlock}>{user.name}</Text>
+                </View>
+                <View>
+                    <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os Laudos</Text>
+                </View>
+                {!loading ?
+                  renderElements(reports)
+                :
+                  <View style={{
+                    flex: 1,
+                    backgroundColor: '#fff', 
+                    marginHorizontal: 10,
+                    marginVertical: '30%',
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    borderRadius: 20,
+                    alignItems: 'center', justifyContent: 'center'}}>
+                    <ActivityIndicator size="large" color="#0000ff"/>
+                    <Text style={{color: '#222', marginVertical: 10}}>Carregando ...</Text>
+                  </View>
+                  
+                }
             </ScrollView>
         </View>
     )

@@ -55,7 +55,7 @@ export default function Scheduling({ navigation }) {
               remoteMessage.data.title,
               remoteMessage.data.body,
               [
-                {text: 'OK', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})},
+                {text: 'FECHAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})},
               ],
               {cancelable: false},
             );
@@ -66,7 +66,7 @@ export default function Scheduling({ navigation }) {
               remoteMessage.data.title,
               remoteMessage.data.body,
               [
-                {text: 'OK', onPress: () => navigation.navigate(remoteMessage.data.screen)},
+                {text: 'FECHAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
               ],
               {cancelable: false},
             );
@@ -127,33 +127,16 @@ export default function Scheduling({ navigation }) {
         }
     }
 
-    const [username, setUsername] = useState('');
-    useEffect(() => {
-        async function loadSchedulings() {
-            const user_id = await AsyncStorage.getItem('@storage_Key');
-            const response = await api.get('/mobile/checkinid/' + user_id, { responseType: 'json' });
-            //O response retorna como objeto no Inkless
-            //É preciso dar um cast para array, como é feito abaixo.
-            const arrResponse = []
-            Object.keys(response.data.schedulings).forEach(key => arrResponse.push(response.data.schedulings[key]));
-            //console.log(response.data.schedulings)
-            setSchedulings(arrResponse);
-            setLoading(!loading);
-            setUsername(response.data.name);
-        }
-        loadSchedulings();
-    }, []);
-
     async function realizarCheckin(scheduling_id) {
         setAlertLoading(true);
-        const response = await api.get('/inklessapp/schedulingcheckin/' + scheduling_id, { responseType: 'json' });
+        const response = await api.get('api/inklessapp/schedulingcheckin/' + scheduling_id, { responseType: 'json' });
         const message = JSON.stringify(response.data);
         if(response.status = 200) {
             setAlertLoading(false);
             console.log(loading);
             Alert.alert("", response.data.message, [
                 {
-                    text: "OK",
+                    text: "ENTENDIDO",
                     onPress: () => navigation.navigate('Reloadscheduling')
                 }
             ]);
@@ -161,7 +144,7 @@ export default function Scheduling({ navigation }) {
             setAlertLoading(false);
             Alert.alert("Houve um erro", "Check-In não pôde ser realizado", [
                 {
-                    text: "OK",
+                    text: "ENTENDIDO",
                     onPress: () => navigation.navigate('Reloadscheduling')
                 }
             ]);
@@ -189,6 +172,35 @@ export default function Scheduling({ navigation }) {
         ); 
     }
 
+    const [user, setUser] = useState('');
+    useEffect(() => {
+      async function loadCustomer() {
+        const user_id = await AsyncStorage.getItem('@storage_Key');
+        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
+        setUser(response.data.data);
+        console.log(user_id);
+        
+      }
+      loadCustomer();
+    }, []);
+
+    const [username, setUsername] = useState('');
+    useEffect(() => {
+        async function loadSchedulings() {
+            const user_id = await AsyncStorage.getItem('@storage_Key');
+            const response = await api.get('api/mobile/checkinid/' + user_id, { responseType: 'json' });
+            //O response retorna como objeto no Inkless
+            //É preciso dar um cast para array, como é feito abaixo.
+            const arrResponse = []
+            Object.keys(response.data.schedulings).forEach(key => arrResponse.push(response.data.schedulings[key]));
+            //console.log(response.data.schedulings)
+            setSchedulings(arrResponse);
+            setLoading(!loading);
+            setUsername(response.data.name);
+        }
+        loadSchedulings();
+    }, []);
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" style={styles.statusBar}/>
@@ -209,10 +221,10 @@ export default function Scheduling({ navigation }) {
                 borderTopLeftRadius: 30, 
                 borderTopRightRadius: 30}}>
                     <View style={styles.titleBlock}>
-                        <Text style={styles.subnameBlock}>{username}</Text>
+                        <Text style={styles.subnameBlock}>{user.name}</Text>
                     </View>
                     <View>
-                        <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os check-in's</Text>
+                        <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os check-ins</Text>
                     </View>
                     {!loading ? 
                         schedulings.length > 0 ? 
@@ -225,7 +237,7 @@ export default function Scheduling({ navigation }) {
                                     paddingVertical: 10,
                                     borderRadius: 20 }}>
                                     <View style={styles.cardBody} >
-                                    <Image style={styles.cardAvatar} source={{uri: 'https://demo.inkless.digital/storage/' + scheduling.professional_image}}/>
+                                    <Image style={styles.cardAvatar} source={{uri: api + 'storage/' + scheduling.professional_image}}/>
                                         <View style={styles.cardLeftSide} >
                                             <Text style={styles.cardName} >Dr(a). {scheduling.professional_name}</Text>
                                             <Text style={styles.cardTime} >{ format(parseISO(scheduling.date_scheduling), "dd/MM/yyyy") } às { scheduling.time_starting_booked }</Text>

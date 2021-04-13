@@ -50,7 +50,7 @@ export default function Acceptcall({ navigation }) {
 
         const config = {
             method: "put",
-            url: `https://demo.inkless.digital/api/mobile/scheduling/meetCall`,
+            url: api + `api/mobile/scheduling/meetCall`,
             data: JSON.stringify(data),
             headers: { "content-type": "application/json" }
         };
@@ -66,7 +66,7 @@ export default function Acceptcall({ navigation }) {
                 "Confirmação",
                 "A teleconsulta foi confirmada com sucesso! Clique no botão 'Atender Chamada' para iniciar o seu atendimento",
                 [
-                  {text: 'OK', onPress: () => navigation.navigate("Reloadcall", { scheduling_id: agendamento })},
+                  {text: 'ATENDER CHAMADA', onPress: () => navigation.navigate("Reloadcall", { scheduling_id: agendamento })},
                 ],
                 {cancelable: false},
               );
@@ -82,7 +82,7 @@ export default function Acceptcall({ navigation }) {
 
     useEffect(() => {
         async function loadSchedulings() {
-            const response = await api.get('/mobile/scheduling/' + agendamento, { responseType: 'json' });
+            const response = await api.get('api/mobile/scheduling/' + agendamento, { responseType: 'json' });
             setSchedulings(response);
             setLoading(!loading);
             console.log(agendamento);
@@ -98,14 +98,15 @@ export default function Acceptcall({ navigation }) {
         return () => clearInterval(interval);
     }, []);
 
-    const [username, setUsername] = useState('');
+    const [user, setUser] = useState('');
     useEffect(() => {
-        async function loadName() {
-            const user_id = await AsyncStorage.getItem('@storage_Key');
-            const response = await api.get('/mobile/checkinid/' + user_id, { responseType: 'json' });
-            setUsername(response.data.name);
-        }
-        loadName();
+      async function loadCustomer() {
+        const user_id = await AsyncStorage.getItem('@storage_Key');
+        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
+        setUser(response.data.data);
+        
+      }
+      loadCustomer();
     }, []);
 
     return (
@@ -128,7 +129,7 @@ export default function Acceptcall({ navigation }) {
                 borderTopLeftRadius: 30, 
                 borderTopRightRadius: 30}}>
                     <View style={styles.titleBlock}>
-                        <Text style={styles.subnameBlock}>{username}</Text>
+                        <Text style={styles.subnameBlock}>{user.name}</Text>
                     </View>
                     <View>
                         <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os check-in's</Text>
@@ -143,7 +144,7 @@ export default function Acceptcall({ navigation }) {
                                 paddingVertical: 10,
                                 borderRadius: 20 }}>
                                     <View style={styles.cardBody} >
-                                        <Image style={styles.cardAvatar} source={{uri: 'https://demo.inkless.digital/storage/' + schedulings.data.professional_image}}/>
+                                        <Image style={styles.cardAvatar} source={{uri: api + 'storage/' + schedulings.data.professional_image}}/>
                                         <View style={styles.cardLeftSide} >
                                             <Text style={styles.cardName} >Dr(a). {schedulings.data.professional_name}</Text>
                                             <Text style={styles.cardTime} >{ format(parseISO(schedulings.data.date_scheduling), "dd/MM/yyyy") } às { schedulings.data.time_starting_booked }</Text>
