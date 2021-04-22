@@ -45,7 +45,7 @@ export default function Users({ navigation }) {
               remoteMessage.data.title,
               remoteMessage.data.body,
               [
-                {text: 'FECHAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})},
+                {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})},
               ],
               {cancelable: false},
             );
@@ -56,7 +56,7 @@ export default function Users({ navigation }) {
               remoteMessage.data.title,
               remoteMessage.data.body,
               [
-                {text: 'FECHAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
+                {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
               ],
               {cancelable: false},
             );

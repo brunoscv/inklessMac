@@ -50,7 +50,7 @@ export default function Login({ navigation }) {
             Alert.alert(
                 remoteMessage.data.title,
                 remoteMessage.data.body, [
-                    { text: 'FECHAR', onPress: () => navigation.navigate(remoteMessage.data.screen) },
+                    { text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen) },
                 ], { cancelable: false },
             );
         });
