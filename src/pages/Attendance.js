@@ -103,8 +103,13 @@ export default function Attendance({ navigation }) {
                 <View style={{ paddingVertical: 5}}>
                     <Text style={{fontSize: 22, color: '#fff'}}>Atendimento</Text>
                 </View>
+                
                 <View style={{paddingVertical: 5}}>
+                {!attendance.image ? 
+                    <Image style={{width: 200, height:200, borderRadius: 200 / 2}} source={require('../../assets/user.png')}/>
+                    : 
                     <Image style={{width: 200, height:200, borderRadius: 200 / 2}} source={{uri: baseURL + 'storage/' + attendance.image}}/>
+                }
                 </View>
                 <View style={{paddingHorizontal: 20}}>
                     <Text style={{fontSize: 16, color: '#fff', paddingVertical: 20}}>{attendance.body}</Text>

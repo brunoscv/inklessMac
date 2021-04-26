@@ -75,11 +75,23 @@ export default function Acceptcall({ navigation }) {
               );
               //Alert.alert("Contato", "A teleconsulta foi confirmada com sucesso! Clique no botão 'Atender Chamada' para iniciar o seu atendimento");
             } else {
-              Alert.alert("Conexão", "Verifique os dados digitados e tente novamente!");
+              Alert.alert(
+                "Conexão",
+                "Verifique os dados digitados e tente novamente!",
+                [
+                  {text: 'ENTENDIDO'},
+                ],
+              );
             }
         } else {
             setCallLoading(false);
-            Alert.alert("Conexão", "Detectamos que você não possui conexão ativa com a Internet. Por favor tente novamente!");
+            Alert.alert(
+                "Conexão",
+                "Detectamos que você não possui conexão ativa com a Internet. Por favor tente novamente!",
+                [
+                  {text: 'ENTENDIDO'},
+                ],
+              );
         }
     }
 
@@ -135,7 +147,7 @@ export default function Acceptcall({ navigation }) {
                         <Text style={styles.subnameBlock}>{user.name}</Text>
                     </View>
                     <View>
-                        <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os check-in's</Text>
+                        <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os check-ins</Text>
                     </View>
                     <View>
                         {!loading ? 

@@ -138,7 +138,7 @@ export default function Reloadscheduling({ navigation }) {
             console.log(loading);
             Alert.alert("", response.data.message, [
                 {
-                    text: "ENTENDIDO",
+                    text: "CONFIRMAR",
                     onPress: () => navigation.navigate('Scheduling')
                 }
             ]);
@@ -146,7 +146,7 @@ export default function Reloadscheduling({ navigation }) {
             setAlertLoading(false);
             Alert.alert("Houve um erro", "Check-In não pôde ser realizado", [
                 {
-                    text: "ENTENDIDO",
+                    text: "CONFIRMAR",
                     onPress: () => navigation.navigate('Scheduling')
                 }
             ]);
@@ -164,7 +164,7 @@ export default function Reloadscheduling({ navigation }) {
                 // if(dist > 200) {
                 //     Alert.alert('Confirmação', 'Você precisa estar próximo ao local da consulta para realizar o Check-In');
                 // }
-                if(dist <= 20000000000) {
+                if(dist <= 200) {
                     realizarCheckin(scheduling_id);
                 }
             },
@@ -208,7 +208,7 @@ export default function Reloadscheduling({ navigation }) {
                         <Text style={styles.subnameBlock}>{user.name}</Text>
                     </View>
                     <View>
-                        <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os check-in's</Text>
+                        <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os check-ins</Text>
                     </View>
                     {!loading ? 
                         schedulings.map(scheduling => 

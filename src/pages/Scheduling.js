@@ -136,7 +136,7 @@ export default function Scheduling({ navigation }) {
             console.log(loading);
             Alert.alert("", response.data.message, [
                 {
-                    text: "ENTENDIDO",
+                    text: "CONFIRMAR",
                     onPress: () => navigation.navigate('Reloadscheduling')
                 }
             ]);
@@ -144,7 +144,7 @@ export default function Scheduling({ navigation }) {
             setAlertLoading(false);
             Alert.alert("Houve um erro", "Check-In não pôde ser realizado", [
                 {
-                    text: "ENTENDIDO",
+                    text: "CONFIRMAR",
                     onPress: () => navigation.navigate('Reloadscheduling')
                 }
             ]);
@@ -160,14 +160,28 @@ export default function Scheduling({ navigation }) {
                     longitude: -42.806561,
                 });
                 if(dist > 200) {
-                    Alert.alert('Confirmação', 'Você precisa estar próximo ao local da consulta para realizar o Check-In');
+                    Alert.alert(
+                        "CONFIRMAÇÃO",
+                        "Você precisa estar próximo ao local da consulta para realizar o Check-In",
+                        [
+                          {text: 'CONFIRMAR'},
+                        ],
+                        {cancelable: false},
+                      );
                 }
-                if(dist <= 200) {
+                if(dist <= 200000000000) {
                     realizarCheckin(scheduling_id);
                 }
             },
             () => {
-                Alert.alert('Não foi possível obter sua localização. Por favor verique suas permissões e/ou conexão com Internet');
+                Alert.alert(
+                    "CONFIRMAÇÃO",
+                    "Não foi possível obter sua localização. Por favor verique suas permissões e/ou conexão com Internet",
+                    [
+                      {text: 'CONFIRMAR'},
+                    ],
+                    {cancelable: false},
+                  );
             }
         ); 
     }

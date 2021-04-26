@@ -103,7 +103,7 @@ export default function Reloadcall({ navigation }) {
                         <Text style={styles.subnameBlock}>{user.name}</Text>
                     </View>
                     <View>
-                        <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os check-in's</Text>
+                        <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os check-ins</Text>
                     </View>
                     <View>
                         {!loading ? 

@@ -128,16 +128,34 @@ export default function Login({ navigation }) {
                     setLoading(false);
                     navigation.navigate('Users', { cpf: unmaskedCpf, birth: unmaskedNasc });
                 } else {
-                    Alert.alert("Conexão", "Verifique os dados digitados e tente novamente!");
+                    Alert.alert(
+                        "Conexão",
+                        "Verifique os dados digitados e tente novamente!",
+                        [
+                          {text: 'ENTENDIDO'},
+                        ],
+                      );
                 }
 
             } else {
                 setLoading(false);
-                Alert.alert("Conexão", "Detectamos que você não possui conexão ativa com a Internet. Por favor tente novamente!");
+                Alert.alert(
+                    "Conexão",
+                    "Detectamos que você não possui conexão ativa com a Internet. Por favor tente novamente!",
+                    [
+                      {text: 'ENTENDIDO'},
+                    ],
+                  );
             }
 
         } else {
-            Alert.alert("Conexão", "Verifique os dados digitados e tente novamente!");
+            Alert.alert(
+                "Conexão",
+                "Verifique os dados digitados e tente novamente!",
+                [
+                  {text: 'ENTENDIDO'},
+                ],
+              );
         }
     }
 
