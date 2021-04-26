@@ -50,28 +50,43 @@ export default function Scheduling({ navigation }) {
           //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
           setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
           console.log(remoteMessage.data);
-          if(remoteMessage.data.scheduling_id) {
+          if(remoteMessage.data.screen == "Attendance" || remoteMessage.data.screen == "Clinic") {
+            //Quando a notificação é para o atendimento em guiche e no consultorio, o aplicativo busca o id do customer para fazer 
+            //a impressao das informações na tela do usuário.
+            //Qualquer outras funcionalidades utilizam o id do agendamento para alimentar as rotas
             Alert.alert(
               remoteMessage.data.title,
               remoteMessage.data.body,
               [
-                {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})},
+                {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: userId})},
               ],
               {cancelable: false},
             );
-            console.log(remoteMessage.data.scheduling_id);
-          }
-          if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
-            Alert.alert(
-              remoteMessage.data.title,
-              remoteMessage.data.body,
-              [
-                {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
-              ],
-              {cancelable: false},
-            );
-            console.log(remoteMessage.data.scheduling_id);
-          }
+            console.log(remoteMessage.data.screen);
+          } else {
+            if(remoteMessage.data.scheduling_id) {
+              Alert.alert(
+                remoteMessage.data.title,
+                remoteMessage.data.body,
+                [
+                  {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})},
+                ],
+                {cancelable: false},
+              );
+              //console.log(remoteMessage.data.scheduling_id);
+            }
+            if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+              Alert.alert(
+                remoteMessage.data.title,
+                remoteMessage.data.body,
+                [
+                  {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
+                ],
+                {cancelable: false},
+              );
+              //console.log(remoteMessage.data.scheduling_id);
+            }
+          } 
         });
         messaging().onNotificationOpenedApp(async remoteMessage => {
           setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
@@ -169,7 +184,7 @@ export default function Scheduling({ navigation }) {
                         {cancelable: false},
                       );
                 }
-                if(dist <= 200000000000) {
+                if(dist <= 200) {
                     realizarCheckin(scheduling_id);
                 }
             },
@@ -186,13 +201,14 @@ export default function Scheduling({ navigation }) {
         ); 
     }
 
+    const [userId, setUserId] = useState('');
     const [user, setUser] = useState('');
     useEffect(() => {
       async function loadCustomer() {
         const user_id = await AsyncStorage.getItem('@storage_Key');
         const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
         setUser(response.data.data);
-        console.log(user_id);
+        setUserId(user_id);
         
       }
       loadCustomer();

@@ -22,6 +22,20 @@ export default function Attendance({ navigation }) {
     const [notifications, setNotifications] = useState([]);
     const [notParse, setNotParse] = useState([]);
     const agendamento = navigation.getParam('scheduling_id', '0');
+
+    const [userId, setUserId] = useState('');
+    const [user, setUser] = useState('');
+    useEffect(() => {
+      async function loadCustomer() {
+        const user_id = await AsyncStorage.getItem('@storage_Key');
+        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
+        setUser(response.data.data);
+        setUserId(user_id);
+        
+      }
+      loadCustomer();
+    }, []);
+   
     /** FIREBASE NOTIFICATION NAVIGATOR */
     useEffect(() => {
         requestUserPermission();
@@ -69,7 +83,7 @@ export default function Attendance({ navigation }) {
     useEffect(() => {
     async function loadAttendances() {
         const user_id = await AsyncStorage.getItem('@storage_Key');
-        const response = await api.get('api/mobile/messageapps/search/' + agendamento, { responseType: 'json' });
+        const response = await api.get('api/mobile/messageapps/search/' + user_id, { responseType: 'json' });
         //O response retorna como objeto no Inkless
         //É preciso dar um cast para array, como é feito abaixo.
         const arrResponse = []
