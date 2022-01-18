@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
-
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { SafeAreaView, View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+
 import messaging from '@react-native-firebase/messaging';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from "@react-native-community/netinfo";
 
 import api from '../services/api';
 import axios from 'axios';
 import baseURL from './Baseurl';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import NetInfo from "@react-native-community/netinfo";
+
 
 export default function Clinic({ navigation }) {
 
@@ -70,6 +71,7 @@ export default function Clinic({ navigation }) {
     async function loadAttendances() {
         const user_id = await AsyncStorage.getItem('@storage_Key');
         const response = await api.get('api/mobile/messageapps/search/' + user_id, { responseType: 'json' });
+        
         //O response retorna como objeto no Inkless
         //É preciso dar um cast para array, como é feito abaixo.
         const arrResponse = []
@@ -115,7 +117,7 @@ export default function Clinic({ navigation }) {
     }
   }
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" style={styles.statusBar}/>
 
             <View style={ {backgroundColor: '#004ba0', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>
@@ -145,7 +147,7 @@ export default function Clinic({ navigation }) {
                 
            
             
-        </View>
+        </SafeAreaView>
     )
 }
 

@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { View, KeyboardAvoidingView, Platform, Image, StyleSheet, Text, TextInput, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
-import messaging from '@react-native-firebase/messaging';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faAngleRight } from '@fortawesome/free-solid-svg-icons';
-import { format } from "date-fns";
+import { TextInputMask } from 'react-native-masked-text';
+
 import Moment from 'moment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { TextInputMask } from 'react-native-masked-text';
 import NetInfo from "@react-native-community/netinfo";
+import messaging from '@react-native-firebase/messaging';
 
 import api from '../services/api';
-
 import logo from '../../assets/inkless.png';
 
 export default function Login({ navigation }) {
@@ -28,135 +27,130 @@ export default function Login({ navigation }) {
     const [isLogedin, setIsLogedin] = useState(false);
 
     useEffect(() => {
-        NetInfo.fetch().then(state => {
-            setConnState(state);
-            getMyStringValue();
-        });
+      NetInfo.fetch().then(state => {
+          setConnState(state);
+          getMyStringValue();
+      });
 
-        const unsubscribe = NetInfo.addEventListener(state => {
-            setConnState(state);
-        });
+      const unsubscribe = NetInfo.addEventListener(state => {
+          setConnState(state);
+      });
 
-        return () => {
-            unsubscribe();
-        };
+      return () => {
+          unsubscribe();
+      };
     }, []);
 
     /** FIREBASE NOTIFICATION NAVIGATOR */
     useEffect(() => {
-        requestUserPermission();
-        const unsubscribe = messaging().onMessage(async remoteMessage => {
-            //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
-            Alert.alert(
-                remoteMessage.data.title,
-                remoteMessage.data.body, [
-                    { text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen) },
-                ], { cancelable: false },
-            );
-        });
-        messaging().onNotificationOpenedApp(remoteMessage => {
-            console.log(
-                'Notification caused app to open from background state:',
-                remoteMessage.data,
-            );
-            navigation.navigate(remoteMessage.data.screen);
-        });
-        messaging().setBackgroundMessageHandler(async remoteMessage => {
-            console.log(
-                'Notification background:',
-                remoteMessage.data,
-            );
-            navigation.navigate(remoteMessage.data.screen);
-        });
-        return unsubscribe;
-    }, []);
+      requestUserPermission();
+      const unsubscribe = messaging().onMessage(async remoteMessage => {
+          //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
+          Alert.alert(
+              remoteMessage.data.title,
+              remoteMessage.data.body, [
+                  { text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen) },
+              ], { cancelable: false },
+          );
+      });
+      messaging().onNotificationOpenedApp(remoteMessage => {
+          console.log(
+              'Notification caused app to open from background state:',
+              remoteMessage.data,
+          );
+          navigation.navigate(remoteMessage.data.screen);
+      });
+      messaging().setBackgroundMessageHandler(async remoteMessage => {
+          console.log(
+              'Notification background:',
+              remoteMessage.data,
+          );
+          navigation.navigate(remoteMessage.data.screen);
+      });
+      return unsubscribe;
+  }, []);
 
-    requestUserPermission = async() => {
-        const authStatus = await messaging().requestPermission();
-        const enabled =
-            authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-            authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+  requestUserPermission = async() => {
+      const authStatus = await messaging().requestPermission();
+      const enabled =
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-        if (enabled) {
-            getFcmToken()
-            console.log('Authorization status:', authStatus);
-        }
-    }
+      if (enabled) {
+          getFcmToken()
+          console.log('Authorization status:', authStatus);
+      }
+  }
 
-    getFcmToken = async() => {
-        const fcmToken = await messaging().getToken();
-        if (fcmToken) {
-            //  console.log(fcmToken);
-            console.log("Your Firebase Token is:", fcmToken);
-        } else {
-            console.log("Failed", "No token received");
-        }
-    }
-    /** FIREBASE NOTIFICATION NAVIGATOR */
+  getFcmToken = async() => {
+      const fcmToken = await messaging().getToken();
+      if (fcmToken) {
+          //  console.log(fcmToken);
+          console.log("Your Firebase Token is:", fcmToken);
+      } else {
+          console.log("Failed", "No token received");
+      }
+  }
+  /** FIREBASE NOTIFICATION NAVIGATOR */
 
     const storeData = async (value) => {
-        try {
-            const varr = await AsyncStorage.setItem('@storage_Key', value);
-        } catch (e) {
-          // saving error
-        }
+      try {
+          const varr = await AsyncStorage.setItem('@storage_Key', value);
+      } catch (e) {
+        // saving error
+      }
     }
 
     getMyStringValue = async () => {
-        try {
-          const logged = await AsyncStorage.getItem('@storage_Key');
-          if (logged) {
-            navigation.navigate('Menu');
-          }
-        } catch(e) {}
-    }
-
-    async function handleLogin() {
-        const unmaskedNasc = Moment(nascUnmaskedField.getRawValue()).format('YYYY-MM-DD');
-        const unmaskedCpf = cpfUnmaskedField.getRawValue();
-        const response = await api.post('api/mobile/searchcpfbirth', { cpf: unmaskedCpf, birth: unmaskedNasc, responseType: 'json' });
-       
-        console.log(unmaskedNasc);
-        console.log(unmaskedCpf);
-        if (response.data['data'] > '0') {
-           
-            const fcmToken = await messaging().getToken();
-            setLoading(true);
-            if (connState.isConnected == true) {
-            
-                if (response) {
-                    setLoading(false);
-                    navigation.navigate('Users', { cpf: unmaskedCpf, birth: unmaskedNasc });
-                } else {
-                    Alert.alert(
-                        "Conexão",
-                        "Verifique os dados digitados e tente novamente!",
-                        [
-                          {text: 'ENTENDIDO'},
-                        ],
-                      );
-                }
-
-            } else {
-                setLoading(false);
-                Alert.alert(
-                    "Conexão",
-                    "Detectamos que você não possui conexão ativa com a Internet. Por favor tente novamente!",
-                    [
-                      {text: 'ENTENDIDO'},
-                    ],
-                  );
-            }
-
-        } else {
-            Alert.alert(
-                "Conexão",
-                "Verifique os dados digitados e tente novamente!",
-                [
-                  {text: 'ENTENDIDO'},
-                ],
-              );
+      try {
+        const logged = await AsyncStorage.getItem('@storage_Key');
+        if (logged) {
+          navigation.navigate('Menu');
         }
+      } catch(e) {}
+    }
+    
+    async function handleLogin() {
+      const unmaskedNasc = Moment(nascUnmaskedField.getRawValue()).format('YYYY-MM-DD');
+      const unmaskedCpf = cpfUnmaskedField.getRawValue();
+      const response = await api.post('api/mobile/searchcpfbirth', { cpf: unmaskedCpf, birth: unmaskedNasc, responseType: 'json' });
+
+      if (response.data['data'] > '0') {   
+        //const fcmToken = await messaging().getToken();
+        setLoading(true);
+        if (connState.isConnected == true) {
+        
+          if (response) {
+            setLoading(false);
+            navigation.navigate('Users', { cpf: unmaskedCpf, birth: unmaskedNasc });
+          } else {
+            Alert.alert(
+              "Conexão",
+              "Verifique os dados digitados e tente novamente!",
+              [
+                {text: 'ENTENDIDO'},
+              ],
+            );
+          }
+        } else {
+          setLoading(false);
+          Alert.alert(
+            "Conexão",
+            "Detectamos que você não possui conexão ativa com a Internet. Por favor tente novamente!",
+            [
+              {text: 'ENTENDIDO'},
+            ],
+          );
+        }
+      } else {
+        Alert.alert(
+          "Conexão",
+          "Verifique os dados digitados e tente novamente!",
+          [
+            {text: 'ENTENDIDO'},
+          ],
+        );
+      }
     }
 
     return (
@@ -165,24 +159,24 @@ export default function Login({ navigation }) {
     
           <View style={styles.form}>
             <Text style={styles.label}>CPF:</Text>
-            {/* <TextInput
+            { /*<TextInput
               style={styles.input}
               placeholder="Ex: 123.456.789-00"
               placeholderTextColor="#fff"
               keyboardType="number-pad"
               onChangeText={ cpf => setCpf(cpf)}
               defaultValue={cpf}
-            /> */}
+            />*/}
             <TextInputMask
-                type={'cpf'}
-                style={styles.input}
-                placeholder="Ex: 123.456.789-00"
-                placeholderTextColor="#fff"
-                value={cpf}
-                onChangeText={cpf => setCpf(cpf)}
-                // add the ref to a local var
-                ref={(ref) => setCpfUnmaskedField(ref)}
-            />
+              type={'cpf'}
+              style={styles.input}
+              placeholder="Ex: 123.456.789-00"
+              placeholderTextColor="#fff"
+              value={cpf}
+              onChangeText={cpf => setCpf(cpf)}
+              // add the ref to a local var
+              ref={(ref) => setCpfUnmaskedField(ref)}
+            /> 
             
     
             <Text style={styles.label}>Data Nascimento:</Text>

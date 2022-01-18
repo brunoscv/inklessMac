@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, StatusBar, Image, TouchableOpacity, ActivityIndicator, PermissionsAndroid, Alert } from 'react-native';
+import { SafeAreaView, View, Text, StyleSheet, StatusBar, Image, TouchableOpacity, ActivityIndicator, PermissionsAndroid, Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faCheckCircle, faPhoneSquareAlt, faVideo } from '@fortawesome/free-solid-svg-icons';
 import { ScrollView } from 'react-native-gesture-handler';
+
 import { format, parseISO } from "date-fns";
+import NetInfo from "@react-native-community/netinfo";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import api from '../services/api';
 import baseURL from './Baseurl';
 import axios from 'axios';
-import NetInfo from "@react-native-community/netinfo";
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // import { Container } from './styles';
 
@@ -23,10 +24,37 @@ export default function Acceptcall({ navigation }) {
     const [answered, setAnswered] = useState(false);
     const [response, setResponse] = useState([]);
     const [showText, setShowText] = useState(true);
-    
+    const [user, setUser] = useState('');
     const agendamento = navigation.getParam('scheduling_id', '0');
+    //const agendamento = 452;
+    
+    useEffect(() => {
+      async function loadCustomer() {
+        const user_id = await AsyncStorage.getItem('@storage_Key');
+        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
+        setUser(response.data.data);
+        
+      }
+      loadCustomer();
+    }, []);
 
-    //console.log(agendamento);
+    useEffect(() => {
+        async function loadSchedulings() {
+            const response = await api.get('api/mobile/scheduling/' + agendamento, { responseType: 'json' });
+            setSchedulings(response);
+            setLoading(!loading);
+            console.log(response.data);
+        }
+        loadSchedulings();
+    }, []);
+
+    useEffect(() => {
+        // Change the state every second or the time given by User.
+        const interval = setInterval(() => {
+          setShowText((showText) => !showText);
+        }, 500);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         NetInfo.fetch().then(state => {
@@ -95,59 +123,29 @@ export default function Acceptcall({ navigation }) {
         }
     }
 
-    useEffect(() => {
-        async function loadSchedulings() {
-            const response = await api.get('api/mobile/scheduling/' + agendamento, { responseType: 'json' });
-            setSchedulings(response);
-            setLoading(!loading);
-            console.log(response.data);
-        }
-        loadSchedulings();
-    }, []);
-
-    useEffect(() => {
-        // Change the state every second or the time given by User.
-        const interval = setInterval(() => {
-          setShowText((showText) => !showText);
-        }, 500);
-        return () => clearInterval(interval);
-    }, []);
-
-    const [user, setUser] = useState('');
-    useEffect(() => {
-      async function loadCustomer() {
-        const user_id = await AsyncStorage.getItem('@storage_Key');
-        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
-        setUser(response.data.data);
-        
-      }
-      loadCustomer();
-    }, []);
+    
 
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" style={styles.statusBar}/>
+        <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="dark-content" style={styles.statusBar}/>
 
-            <View style={{backgroundColor: '#004ba0'}}>
-                <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>
+            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }> */ }
+                <View style={ {backgroundColor: '#1976d2', padding: 10, flexDirection: 'row'} }>
                     <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
                         <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
                     </TouchableOpacity>
                 
                     <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Teleconsulta</Text></View>
                 </View>
-            </View>
             
             <ScrollView style={{
                 flex: 1, 
-                backgroundColor: "#f5f5f5", 
-                borderTopLeftRadius: 30, 
-                borderTopRightRadius: 30}}>
+                backgroundColor: "#f5f5f5"}}>
                     <View style={styles.titleBlock}>
                         <Text style={styles.subnameBlock}>{user.name}</Text>
                     </View>
                     <View>
-                        <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os check-ins</Text>
+                        <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Aceitar chamada(s)</Text>
                     </View>
                     <View>
                         {!loading ? 
@@ -222,7 +220,7 @@ export default function Acceptcall({ navigation }) {
                     
                 
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -247,7 +245,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     titleBlock: {
-        backgroundColor: '#004ba0',
+        backgroundColor: '#1976d2',
         padding: 15,
         borderBottomLeftRadius: 15,
         borderBottomRightRadius: 15

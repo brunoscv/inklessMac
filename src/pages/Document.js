@@ -1,151 +1,119 @@
 import React, { useEffect, useState } from 'react';
-
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, ActivityIndicator, PermissionsAndroid, Alert } from 'react-native';
+import { SafeAreaView, View, Text, StyleSheet, StatusBar, TouchableOpacity, ActivityIndicator, PermissionsAndroid, Alert, Platform } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faArrowLeft, faFileAlt, faUserCircle, faDownload } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faFileAlt, faDownload } from '@fortawesome/free-solid-svg-icons';
 import { ScrollView } from 'react-native-gesture-handler';
 
 import { format, parseISO } from "date-fns";
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import RNFetchBlob from 'rn-fetch-blob';
+import messaging from '@react-native-firebase/messaging';
 
 import api from '../services/api';
-import messaging from '@react-native-firebase/messaging';
-import RNFetchBlob from 'rn-fetch-blob';
 
 export default function Document({ navigation }) {
-
-    /** FIREBASE NOTIFICATION NAVIGATOR */
-  useEffect(() => {
-    requestUserPermission();
-    const unsubscribe = messaging().onMessage(async remoteMessage => {
-      //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
-      Alert.alert(
-        remoteMessage.data.title,
-        remoteMessage.data.body,
-        [
-          {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
-        ],
-        {cancelable: false},
-      );
-    });
-    messaging().onNotificationOpenedApp(remoteMessage => {
-        console.log(
-          'Notification caused app to open from background state:',
-          remoteMessage.data,
-        );
-        navigation.navigate(remoteMessage.data.screen);
-      });
-      messaging().setBackgroundMessageHandler(async remoteMessage => {
-        console.log(
-          'Notification background:',
-          remoteMessage.data,
-        );
-        navigation.navigate(remoteMessage.data.screen);
-      });
-    return unsubscribe;
-   }, []);
-
-  requestUserPermission = async () => {
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-    if (enabled) {
-      getFcmToken()
-      console.log('Authorization status:', authStatus);
-    }
-  }
-
-  getFcmToken = async () => {
-    const fcmToken = await messaging().getToken();
-    if (fcmToken) {
-     console.log(fcmToken);
-     console.log("Your Firebase Token is:", fcmToken);
-    } else {
-     console.log("Failed", "No token received");
-    }
-  }
-  /** FIREBASE NOTIFICATION NAVIGATOR */
-
-  useEffect(() => {
-    async function requestFilePermission() {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          {
-            title: "Storage Permission",
-            message: "App needs access to memory to download the file "
-          }
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log("Permitido");
-        } else {
-          console.log("Não Permitido");
-        }
-      } catch (err) {
-        console.warn(err);
-      }
-    }
-    requestFilePermission();
-  }, []);
-
-  const downloadImage = (document) => {
-    let file_URL = 'https://demo.denarius.digital/storage/'+ document;    
-    const { config, fs } = RNFetchBlob;
-    let PictureDir = fs.dirs.PictureDir;
-    let options = {
-      fileCache: true,
-      addAndroidDownloads: {
-        useDownloadManager: true,
-        notification: true,
-        path: PictureDir + '/' + document,
-        description: 'Arquivo',
-      },
-    };
-    config(options)
-    .fetch('GET', file_URL)
-    .then(res => {
-      console.log('res -> ', JSON.stringify(res));
-      Alert.alert(
-        "CONFIRMAÇÃO",
-        "Seu download foi realizado com sucesso!",
-        [
-          {text: 'VER ARQUIVO'},
-        ],
-        {cancelable: false},
-      );
-    });
-  };
-
+    
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState('');
+
     useEffect(() => {
-      async function loadDocuments() {
+        async function loadCustomer() {
           const user_id = await AsyncStorage.getItem('@storage_Key');
-          const response = await api.get('api/inklessapp/clinicdoc/customer/' + user_id, { responseType: 'json' });
-          //O response retorna como objeto no Inkless
-          //É preciso dar um cast para array, como é feito abaixo.
-          const arrResponse = []
-          Object.keys(response.data).forEach(key => arrResponse.push(response.data[key]));
-          //
-          setDocuments(arrResponse);
-          setLoading(!loading);
+          //const user_id = 30059;
+          const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
+          setUser(response.data.data);
+          
+        }
+        loadCustomer();
+      }, []);
+
+    useEffect(() => {
+      async function requestFilePermission() {
+        try {
+          if(Platform.OS == 'ios') {
+            console.log("IOs");
+          } else {
+            const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+            {
+              title: "Storage Permission",
+              message: "App needs access to memory to download the file "
+            }
+            );
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+              console.log("Permitido");
+            } else {
+              console.log("Não Permitido");
+            }
+          } 
+        } catch (err) {
+          console.warn(err);
+        }
       }
-      loadDocuments();
+      requestFilePermission();
     }, []);
 
-    const [user, setUser] = useState('');
     useEffect(() => {
-      async function loadCustomer() {
-        const user_id = await AsyncStorage.getItem('@storage_Key');
-        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
-        setUser(response.data.data);
-        
-      }
-      loadCustomer();
+        async function loadDocuments() {
+            const user_id = await AsyncStorage.getItem('@storage_Key');
+            //const user_id = 30059;
+            const response = await api.get('api/inklessapp/clinicdoc/customer/' + user_id, { responseType: 'json' });
+            //O response retorna como objeto no Inkless
+            //É preciso dar um cast para array, como é feito abaixo.
+            const arrResponse = []
+            Object.keys(response.data).forEach(key => arrResponse.push(response.data[key]));
+            //
+            setDocuments(arrResponse);
+            setLoading(!loading);
+        }
+        loadDocuments();
     }, []);
+
+    const downloadImage = (document) => {
+        const file_URL = 'https://demo.denarius.digital/storage/'+ document;
+        const encodedURI = encodeURI(file_URL); 
+        const { config, fs } = RNFetchBlob;
+        console.log(file_URL);
+        //let PictureDir = fs.dirs.PictureDir;
+        const DocumentDir = Platform.OS == 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir
+        const configfb = {
+          fileCache: true,
+          useDownloadManager: true,
+          notification: true,
+          mediaScannable: true,
+          title: `${document}`,
+          path: `${DocumentDir}/${document}`,
+          description: 'Arquivo',
+          
+        }
+        const configOptions = Platform.select({
+          ios: {
+              fileCache: configfb.fileCache,
+              title: configfb.title,
+              path: configfb.path,
+              appendExt: 'pdf',
+          },
+          android: configfb,
+      });
+        config(configOptions)
+        .fetch('GET', encodedURI)
+        .then(res => {
+        console.log('res -> ', JSON.stringify(res));
+        if (Platform.OS === "ios") {
+          RNFetchBlob.fs.writeFile(configfb.path, res.data, 'base64');
+          RNFetchBlob.ios.previewDocument(configfb.path);
+        }
+        Alert.alert(
+            "CONFIRMAÇÃO",
+            "Seu download foi realizado com sucesso!",
+            [
+            {text: 'VER ARQUIVO'},
+            ],
+            {cancelable: false},
+        );
+        });
+    };
 
     const renderElements = (documents) => {
       if(documents[0] == '400') {
@@ -197,24 +165,107 @@ export default function Document({ navigation }) {
         )
       }
     }
+
+    /** FIREBASE NOTIFICATION NAVIGATOR */
+    useEffect(() => {
+        requestUserPermission();
+        const unsubscribe = messaging().onMessage(async remoteMessage => {
+          //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          console.log(remoteMessage.data);
+          if(remoteMessage.data.screen == "Attendance" || remoteMessage.data.screen == "Clinic") {
+            //Quando a notificação é para o atendimento em guiche e no consultorio, o aplicativo busca o id do customer para fazer 
+            //a impressao das informações na tela do usuário.
+            //Qualquer outras funcionalidades utilizam o id do agendamento para alimentar as rotas
+            Alert.alert(
+              remoteMessage.data.title,
+              remoteMessage.data.body,
+              [
+                {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: userId})},
+              ],
+              {cancelable: false},
+            );
+            console.log(remoteMessage.data.screen);
+          } else {
+            if(remoteMessage.data.scheduling_id) {
+              Alert.alert(
+                remoteMessage.data.title,
+                remoteMessage.data.body,
+                [
+                  {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})},
+                ],
+                {cancelable: false},
+              );
+              //console.log(remoteMessage.data.scheduling_id);
+            }
+            if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+              Alert.alert(
+                remoteMessage.data.title,
+                remoteMessage.data.body,
+                [
+                  {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
+                ],
+                {cancelable: false},
+              );
+              //console.log(remoteMessage.data.scheduling_id);
+            }
+          } 
+        });
+        messaging().onNotificationOpenedApp(async remoteMessage => {
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          if(remoteMessage.data.scheduling_id) {
+            navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})
+          }
+          if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+            navigation.navigate(remoteMessage.data.screen)
+          }
+          console.log(remoteMessage.data.scheduling_id);
+        });
+        messaging().setBackgroundMessageHandler(async remoteMessage => {
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          if(remoteMessage.data.scheduling_id) {
+            navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})
+          }
+          if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+            navigation.navigate(remoteMessage.data.screen)
+          }
+          console.log(remoteMessage.data.scheduling_id);
+        });
+        return unsubscribe;
+       }, []);
+
+  requestUserPermission = async () => {
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+    if (enabled) {
+      getFcmToken();
+    }
+  }
+
+  getFcmToken = async () => {
+    const fcmToken = await messaging().getToken();
+  }
+  /** FIREBASE NOTIFICATION NAVIGATOR */
+
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" style={styles.statusBar}/>
-            <View style={{backgroundColor: '#004ba0'}}>
-                <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>
+        <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="dark-content" style={styles.statusBar}/>
+
+            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }> */ }
+                <View style={ {backgroundColor: '#1976d2', padding: 10, flexDirection: 'row'} }>
                     <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
                         <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
                     </TouchableOpacity>
                 
                     <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Documentos</Text></View>
                 </View>
-            </View>
 
             <ScrollView style={{
                 flex: 1, 
-                backgroundColor: "#ddd", 
-                borderTopLeftRadius: 30, 
-                borderTopRightRadius: 30 }}>
+                backgroundColor: "#f5f5f5" }}>
                     <View style={styles.titleBlock}>
                         <Text style={styles.subnameBlock}>{user.name}</Text>
                     </View>
@@ -238,7 +289,7 @@ export default function Document({ navigation }) {
                     }  
                
             </ScrollView>
-        </View>
+        </SafeAreaView>
     )
 }
 
@@ -264,7 +315,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     titleBlock: {
-        backgroundColor: '#004ba0',
+        backgroundColor: '#1976d2',
         padding: 15,
         borderBottomLeftRadius: 15,
         borderBottomRightRadius: 15

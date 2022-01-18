@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
 
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { SafeAreaView, View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+
 import messaging from '@react-native-firebase/messaging';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from "@react-native-community/netinfo";
 
 import api from '../services/api';
 import axios from 'axios';
 import baseURL from './Baseurl';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import NetInfo from "@react-native-community/netinfo";
 
 export default function Attendance({ navigation }) {
 
@@ -134,7 +135,7 @@ export default function Attendance({ navigation }) {
     }
   }
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" style={styles.statusBar}/>
 
             <View style={ {backgroundColor: '#004ba0', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>
@@ -164,7 +165,7 @@ export default function Attendance({ navigation }) {
                 
            
             
-        </View>
+        </SafeAreaView>
     )
 }
 

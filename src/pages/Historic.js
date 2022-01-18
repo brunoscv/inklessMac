@@ -1,86 +1,40 @@
 import React, { useEffect, useState } from 'react';
-
-import { View, Text, StyleSheet, StatusBar, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaView, View, Text, StyleSheet, StatusBar, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faArrowLeft, faBan, faUserCircle, faCheckCircle, faCircleNotch } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faBan, faCheckCircle, faCircleNotch } from '@fortawesome/free-solid-svg-icons';
 import { ScrollView } from 'react-native-gesture-handler';
+
 import { format, parseISO } from "date-fns";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import messaging from '@react-native-firebase/messaging';
 
 import api from '../services/api';
 import baseURL from './Baseurl';
-import messaging from '@react-native-firebase/messaging';
 
 // import { Container } from './styles';
+import Scheduling from './Scheduling';
 
 export default function Historic({ navigation }) {
-
-    async function goToMenu() {
-        //const response = await api.get()
-        //await AsyncStorage.setItem('user', 30059);
-        navigation.navigate('Menu');
-    }
-
-    /** FIREBASE NOTIFICATION NAVIGATOR */
-  useEffect(() => {
-    requestUserPermission();
-    const unsubscribe = messaging().onMessage(async remoteMessage => {
-      //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
-      Alert.alert(
-        remoteMessage.data.title,
-        remoteMessage.data.body,
-        [
-          {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
-        ],
-        {cancelable: false},
-      );
-    });
-    messaging().onNotificationOpenedApp(remoteMessage => {
-        console.log(
-          'Notification caused app to open from background state:',
-          remoteMessage.data,
-        );
-        navigation.navigate(remoteMessage.data.screen);
-      });
-      messaging().setBackgroundMessageHandler(async remoteMessage => {
-        console.log(
-          'Notification background:',
-          remoteMessage.data,
-        );
-        navigation.navigate(remoteMessage.data.screen);
-      });
-    return unsubscribe;
-   }, []);
-
-  requestUserPermission = async () => {
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-    if (enabled) {
-      getFcmToken()
-      console.log('Authorization status:', authStatus);
-    }
-  }
-
-  getFcmToken = async () => {
-    const fcmToken = await messaging().getToken();
-    if (fcmToken) {
-     console.log(fcmToken);
-     console.log("Your Firebase Token is:", fcmToken);
-    } else {
-     console.log("Failed", "No token received");
-    }
-  }
-  /** FIREBASE NOTIFICATION NAVIGATOR */
 
     const [schedulings, setSchedulings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [username, setUsername] = useState('');
+    const [user, setUser] = useState('');
+
+    useEffect(() => {
+        async function loadCustomer() {
+          const user_id = await AsyncStorage.getItem('@storage_Key');
+          //const user_id = 30059;
+          const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
+          setUser(response.data.data);
+        }
+        loadCustomer();
+    }, []);
+
     useEffect(() => {
         async function loadSchedulings() {
             const user_id = await AsyncStorage.getItem('@storage_Key');
+            //const user_id = 30059;
             const response = await api.get('api/mobile/checkinidall/' + user_id, { responseType: 'json' });
             //O response retorna como objeto no Inkless
             //É preciso dar um cast para array, como é feito abaixo.
@@ -94,35 +48,113 @@ export default function Historic({ navigation }) {
         loadSchedulings();
     }, []);
 
-    const [user, setUser] = useState('');
-    useEffect(() => {
-      async function loadCustomer() {
-        const user_id = await AsyncStorage.getItem('@storage_Key');
-        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
-        setUser(response.data.data);
-        
-      }
-      loadCustomer();
-    }, []);
+    async function goToMenu() {
+        //const response = await api.get()
+        //await AsyncStorage.setItem('user', 30059);
+        navigation.navigate('Menu');
+    }
 
+    /** FIREBASE NOTIFICATION NAVIGATOR */
+    useEffect(() => {
+        requestUserPermission();
+        const unsubscribe = messaging().onMessage(async remoteMessage => {
+          //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          console.log(remoteMessage.data);
+          if(remoteMessage.data.screen == "Attendance" || remoteMessage.data.screen == "Clinic") {
+            //Quando a notificação é para o atendimento em guiche e no consultorio, o aplicativo busca o id do customer para fazer 
+            //a impressao das informações na tela do usuário.
+            //Qualquer outras funcionalidades utilizam o id do agendamento para alimentar as rotas
+            Alert.alert(
+              remoteMessage.data.title,
+              remoteMessage.data.body,
+              [
+                {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: userId})},
+              ],
+              {cancelable: false},
+            );
+            console.log(remoteMessage.data.screen);
+          } else {
+            if(remoteMessage.data.scheduling_id) {
+              Alert.alert(
+                remoteMessage.data.title,
+                remoteMessage.data.body,
+                [
+                  {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})},
+                ],
+                {cancelable: false},
+              );
+              //console.log(remoteMessage.data.scheduling_id);
+            }
+            if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+              Alert.alert(
+                remoteMessage.data.title,
+                remoteMessage.data.body,
+                [
+                  {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
+                ],
+                {cancelable: false},
+              );
+              //console.log(remoteMessage.data.scheduling_id);
+            }
+          } 
+        });
+        messaging().onNotificationOpenedApp(async remoteMessage => {
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          if(remoteMessage.data.scheduling_id) {
+            navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})
+          }
+          if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+            navigation.navigate(remoteMessage.data.screen)
+          }
+          console.log(remoteMessage.data.scheduling_id);
+        });
+        messaging().setBackgroundMessageHandler(async remoteMessage => {
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          if(remoteMessage.data.scheduling_id) {
+            navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})
+          }
+          if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+            navigation.navigate(remoteMessage.data.screen)
+          }
+          console.log(remoteMessage.data.scheduling_id);
+        });
+        return unsubscribe;
+       }, []);
+
+  requestUserPermission = async () => {
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+    if (enabled) {
+      getFcmToken();
+    }
+  }
+
+  getFcmToken = async () => {
+    const fcmToken = await messaging().getToken();
+  }
+  /** FIREBASE NOTIFICATION NAVIGATOR */
+  
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" style={styles.statusBar}/>
-            
-            <View style={{backgroundColor: '#004ba0'}}>
-                <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>
-                    <TouchableOpacity onPress={goToMenu} style={{padding: 5}}>
+        <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="dark-content" style={styles.statusBar}/>
+
+            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }> */ }
+                <View style={ {backgroundColor: '#1976d2', padding: 10, flexDirection: 'row'} }>
+                    <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
                         <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
                     </TouchableOpacity>
                 
                     <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Agendamentos</Text></View>
                 </View>
-            </View>
 
             <ScrollView style={{
                 flex: 1, 
                 position: 'relative',
-                backgroundColor: "#eee"}}>
+                backgroundColor: "#f5f5f5"}}>
                     <View style={styles.titleBlock}>
                         <Text style={styles.subnameBlock}>{user.name}</Text>
                     </View>
@@ -145,7 +177,7 @@ export default function Historic({ navigation }) {
                                         <Text style={styles.cardName} >Dr(a). {scheduling.professional_name}</Text>
                                         <Text style={styles.cardCRM} >CRM: {scheduling.professional_crm}</Text>
                                         <Text style={styles.cardTime} >{ format(parseISO(scheduling.date_scheduling), "dd/MM/yyyy") } às { scheduling.time_starting_booked }</Text>
-                                        <Text style={styles.cardAddress} >Consulta Presencial</Text>
+                                        <Text style={styles.cardAddress} >{ scheduling.video_appointment == true ? <Text>Teleconsulta</Text> : <Text>Consulta Presencial</Text>} - Hospital Gastrovita</Text>
                                     </View>
                                 </View>
                                 <View style={styles.cardFooter}>
@@ -156,15 +188,33 @@ export default function Historic({ navigation }) {
                                                 <Text style={styles.buttonText}>Indisponível</Text>
                                             </View>
                                         : (
-                                            scheduling.check_in == "Green" 
-                                                ?   <View style={styles.successButton}>
+                                            scheduling.check_in == "Blue" 
+                                            ?   
+                                                <View style={styles.primaryButton}>
+                                                    <FontAwesomeIcon icon={ faCircleNotch } size={20} color="#fff"/>
+                                                    <Text style={styles.buttonText}>Aguardando</Text>
+                                                </View>
+                                                
+                                            :   
+                                            ( scheduling.status == 4 || scheduling.status == 5
+                                                
+                                                ?   <View style={styles.cardFooter}>
+                                                        <View style={styles.successButton}>
+                                                            <FontAwesomeIcon icon={ faCheckCircle } size={20} color="#fff"/>
+                                                            <Text style={styles.buttonText}>Check-In Feito</Text>
+                                                        </View>
+                                                        <View style={styles.successButton}>
+                                                            <FontAwesomeIcon icon={ faCheckCircle } size={20} color="#fff"/>
+                                                            <Text style={styles.buttonText}>Atendido</Text>
+                                                        </View>
+                                                    </View>
+                                            
+                                                : 
+                                                    <View style={styles.successButton}>
                                                         <FontAwesomeIcon icon={ faCheckCircle } size={20} color="#fff"/>
-                                                        <Text style={styles.buttonText}>Atendido</Text>
-                                                    </View>
-                                                :   <View style={styles.primaryButton}>
-                                                        <FontAwesomeIcon icon={ faCircleNotch } size={20} color="#fff"/>
-                                                        <Text style={styles.buttonText}>Aguardando</Text>
-                                                    </View>
+                                                        <Text style={styles.buttonText}>Check-In Feito</Text>
+                                                    </View> 
+                                            )
                                         )
                                     } 
 
@@ -185,7 +235,7 @@ export default function Historic({ navigation }) {
                     }           
                
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -209,7 +259,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     titleBlock: {
-        backgroundColor: '#004ba0',
+        backgroundColor: '#1976d2',
         padding: 15,
         borderBottomLeftRadius: 15,
         borderBottomRightRadius: 15

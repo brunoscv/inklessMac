@@ -2,7 +2,10 @@ import { createAppContainer, createSwitchNavigator} from 'react-navigation';
 
 import Menu from './pages/Menu';
 import Login from './pages/Login';
+import Rating from './pages/Rating';
 import Users from './pages/Users';
+import CodeRequest from './pages/CodeRequest';
+import CodeConfirm from './pages/CodeConfirm';
 import Scheduling from './pages/Scheduling';
 import Reloadscheduling from './pages/Reloadscheduling';
 import Historic from './pages/Historic';
@@ -18,7 +21,10 @@ const Routes = createAppContainer(
     createSwitchNavigator({
         Menu,
         Login,
+        //Rating,
         Users,
+        CodeRequest,
+        CodeConfirm,
         Scheduling,
         Reloadscheduling,
         Historic,

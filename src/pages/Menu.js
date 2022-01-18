@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Image, Alert } from 'react-native';
+import { SafeAreaView, View, StyleSheet, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faClock, faBookReader, faFile, faFolder, faSignOutAlt, faVideo } from '@fortawesome/free-solid-svg-icons';
+import { faClock, faBookReader, faFile, faFolder, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import messaging from '@react-native-firebase/messaging';
 
@@ -14,17 +15,38 @@ export default function Menu({ navigation }) {
   const [scheduling, setScheduling] = useState(0);
   const [userId, setUserId] = useState('');
   const [user, setUser] = useState('');
-    useEffect(() => {
-      async function loadCustomer() {
-        const user_id = await AsyncStorage.getItem('@storage_Key');
-        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
-        setUser(response.data.data);
-        setUserId(user_id);
-        
-      }
-      loadCustomer();
-    }, []);
- 
+
+  useEffect(() => {
+    async function loadCustomer() {
+      const user_id = await AsyncStorage.getItem('@storage_Key');
+      //const user_id = 30059;
+      const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
+      setUser(response.data.data);
+      setUserId(user_id);
+      
+    }
+    loadCustomer();
+  }, []);
+
+  useEffect(() => {
+    async function getMyStringValue() {
+      try {
+        const logged = await AsyncStorage.getItem('@storage_Key');
+        if (logged == null || logged == "" || !logged) {
+          navigation.navigate('Login');
+        }
+      } catch(e) {}
+    }
+    getMyStringValue();
+  }, []);
+
+  async function removeValue() {
+    try {
+      await AsyncStorage.removeItem('@storage_Key');
+      navigation.navigate('Login');
+    } catch(e) {}
+  }
+
   /** FIREBASE NOTIFICATION NAVIGATOR */
   useEffect(() => {
     requestUserPermission();
@@ -101,7 +123,6 @@ export default function Menu({ navigation }) {
 
     if (enabled) {
       getFcmToken()
-      getMyStringValue()
       console.log('Authorization status:', authStatus);
     }
   }
@@ -115,27 +136,10 @@ export default function Menu({ navigation }) {
      console.log("Failed", "No token received");
     }
   }
-
-  getMyStringValue = async () => {
-    try {
-      const logged = await AsyncStorage.getItem('@storage_Key');
-      if (logged == null || logged == "" || !logged) {
-        navigation.navigate('Login');
-      }
-    } catch(e) {}
-  }
-
-  async function removeValue() {
-    try {
-      await AsyncStorage.removeItem('@storage_Key');
-      navigation.navigate('Login');
-    } catch(e) {}
-  }
-
   /** FIREBASE NOTIFICATION NAVIGATOR */
 
   return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
       <View>
         <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row', justifyContent: 'space-between'} }>
           <Text style={styles.menuText}>Bem vindo(a):</Text>
@@ -146,7 +150,6 @@ export default function Menu({ navigation }) {
           }
         </View>
         <Text style={styles.nameText}>{user.name}</Text>
-        
       </View>
       <View style={styles.content}>
         <View style={styles.firstrow}>
@@ -183,7 +186,7 @@ export default function Menu({ navigation }) {
           </View>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -259,4 +262,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 10
   },
+  successButton: {
+    backgroundColor: '#388e3c',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius:4,
+    margin: 2,
+    padding: 4,
+    flexDirection: 'row'
+  }
 });

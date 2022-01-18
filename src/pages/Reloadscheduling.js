@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, StatusBar, Image, TouchableOpacity, ActivityIndicator, PermissionsAndroid, Alert } from 'react-native';
+import { SafeAreaView, View, Text, StyleSheet, StatusBar, Image, TouchableOpacity, ActivityIndicator, PermissionsAndroid, Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faUserCircle, faCheckCircle, faPhoneSquareAlt } from '@fortawesome/free-solid-svg-icons';
 import { ScrollView } from 'react-native-gesture-handler';
+
 import { format, parseISO } from "date-fns";
 import Geolocation from 'react-native-geolocation-service';
 import * as geolib from 'geolib';
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import api from '../services/api';
-import baseURL from './Baseurl';
-import axios from 'axios';
 import NetInfo from "@react-native-community/netinfo";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import messaging from '@react-native-firebase/messaging';
 
+import api from '../services/api';
+import axios from 'axios';
+import baseURL from './Baseurl';
+import logo from '../../assets/st.png';
 // import { Container } from './styles';
 
 export default function Reloadscheduling({ navigation }) {
@@ -27,6 +27,9 @@ export default function Reloadscheduling({ navigation }) {
     const [callLoading, setCallLoading] = useState(false);
     const [connState, setConnState] = useState(0);
     const [response, setResponse] = useState([]);
+    const [userId, setUserId] = useState('');
+    const [user, setUser] = useState('');
+    const [username, setUsername] = useState('');
 
     useEffect(() => {
         NetInfo.fetch().then(state => {
@@ -42,109 +45,22 @@ export default function Reloadscheduling({ navigation }) {
         };
     }, []);
 
-    /** FIREBASE NOTIFICATION NAVIGATOR */
-  useEffect(() => {
-    requestUserPermission();
-    const unsubscribe = messaging().onMessage(async remoteMessage => {
-      //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
-      if(remoteMessage.data.screen == "Attendance" || remoteMessage.data.screen == "Clinic") {
-        //Quando a notificação é para o atendimento em guiche e no consultorio, o aplicativo busca o id do customer para fazer 
-        //a impressao das informações na tela do usuário.
-        //Qualquer outras funcionalidades utilizam o id do agendamento para alimentar as rotas
-        Alert.alert(
-          remoteMessage.data.title,
-          remoteMessage.data.body,
-          [
-            {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: userId})},
-          ],
-          {cancelable: false},
-        );
-        console.log(remoteMessage.data.screen);
-      } else {
-        if(remoteMessage.data.scheduling_id) {
-          Alert.alert(
-            remoteMessage.data.title,
-            remoteMessage.data.body,
-            [
-              {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})},
-            ],
-            {cancelable: false},
-          );
-          //console.log(remoteMessage.data.scheduling_id);
+    useEffect(() => {
+        async function loadCustomer() {
+          const user_id = await AsyncStorage.getItem('@storage_Key');
+          //const user_id = 30059;
+          const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
+          setUser(response.data.data);
+          setUserId(user_id);
+          
         }
-        if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
-          Alert.alert(
-            remoteMessage.data.title,
-            remoteMessage.data.body,
-            [
-              {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
-            ],
-            {cancelable: false},
-          );
-          //console.log(remoteMessage.data.scheduling_id);
-        }
-      } 
-    });
-    messaging().onNotificationOpenedApp(remoteMessage => {
-        console.log(
-          'Notification caused app to open from background state:',
-          remoteMessage.data,
-        );
-        navigation.navigate(remoteMessage.data.screen);
-      });
-      messaging().setBackgroundMessageHandler(async remoteMessage => {
-        console.log(
-          'Notification background:',
-          remoteMessage.data,
-        );
-        navigation.navigate(remoteMessage.data.screen);
-      });
-    return unsubscribe;
-   }, []);
-
-  requestUserPermission = async () => {
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-    if (enabled) {
-      getFcmToken()
-      console.log('Authorization status:', authStatus);
-    }
-  }
-
-  getFcmToken = async () => {
-    const fcmToken = await messaging().getToken();
-    if (fcmToken) {
-    //  console.log(fcmToken);
-     console.log("Your Firebase Token is:", fcmToken);
-    } else {
-     console.log("Failed", "No token received");
-    }
-  }
-  /** FIREBASE NOTIFICATION NAVIGATOR */
-
-    async function verifyLocationPermission() {
-        try {
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-          );
-          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log('permissão concedida');
-            setHasLocationPermission(true);
-          } else {
-            console.error('permissão negada');
-            setHasLocationPermission(false);
-          }
-        } catch (err) {
-          console.warn(err);
-        }
-    }
+        loadCustomer();
+    }, []);
 
     useEffect(() => {
         async function loadSchedulings() {
             const user_id = await AsyncStorage.getItem('@storage_Key');
+            //const user_id = 30059;
             const response = await api.get('api/mobile/checkinid/' + user_id, { responseType: 'json' });
             //O response retorna como objeto no Inkless
             //É preciso dar um cast para array, como é feito abaixo.
@@ -153,15 +69,37 @@ export default function Reloadscheduling({ navigation }) {
             //console.log(response.data.schedulings)
             setSchedulings(arrResponse);
             setLoading(!loading);
+            setUsername(response.data.name);
         }
         loadSchedulings();
     }, []);
-    
+
+    async function verifyLocationPermission() {
+        try {
+            if(Platform.OS == 'ios') {
+                Geolocation.requestAuthorization('whenInUse').then((res) => {
+                    console.log(res);
+                    setHasLocationPermission(true);
+                  });
+            } else {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+                );
+                if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                    setHasLocationPermission(true);
+                } else {
+                    setHasLocationPermission(false);
+                }
+            }
+        } catch (err) {
+          console.warn(err);
+        }
+    }
 
     async function realizarCheckin(scheduling_id) {
         setAlertLoading(true);
         const response = await api.get('api/inklessapp/schedulingcheckin/' + scheduling_id, { responseType: 'json' });
-        console.log(response);
+        const message = JSON.stringify(response.data);
         if(response.status = 200) {
             setAlertLoading(false);
             console.log(loading);
@@ -190,51 +128,134 @@ export default function Reloadscheduling({ navigation }) {
                     latitude: -5.091214,
                     longitude: -42.806561,
                 });
-                // if(dist > 200) {
-                //     Alert.alert('Confirmação', 'Você precisa estar próximo ao local da consulta para realizar o Check-In');
-                // }
+                if(dist > 200) {
+                    Alert.alert(
+                        "CONFIRMAÇÃO",
+                        "Você precisa estar próximo ao local da consulta para realizar o Check-In",
+                        [
+                          {text: 'CONFIRMAR'},
+                        ],
+                        {cancelable: false},
+                      );
+                }
                 if(dist <= 200) {
                     realizarCheckin(scheduling_id);
                 }
             },
             () => {
-                Alert.alert('Não foi possível obter sua localização. Por favor verique suas permissões e/ou conexão com Internet');
-            }
+                Alert.alert(
+                    "CONFIRMAÇÃO",
+                    "Não foi possível obter sua localização. Por favor verique suas permissões e/ou conexão com Internet",
+                    [
+                      {text: 'CONFIRMAR'},
+                    ],
+                    {cancelable: false},
+                  );
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
         ); 
     }
 
-    const [userId, setUserId] = useState('');
-    const [user, setUser] = useState('');
+    /** FIREBASE NOTIFICATION NAVIGATOR */
     useEffect(() => {
-      async function loadCustomer() {
-        const user_id = await AsyncStorage.getItem('@storage_Key');
-        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
-        setUser(response.data.data);
-        setUserId(user_id);
-        
-      }
-      loadCustomer();
-    }, []);
+        requestUserPermission();
+        const unsubscribe = messaging().onMessage(async remoteMessage => {
+          //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          console.log(remoteMessage.data);
+          if(remoteMessage.data.screen == "Attendance" || remoteMessage.data.screen == "Clinic") {
+            //Quando a notificação é para o atendimento em guiche e no consultorio, o aplicativo busca o id do customer para fazer 
+            //a impressao das informações na tela do usuário.
+            //Qualquer outras funcionalidades utilizam o id do agendamento para alimentar as rotas
+            Alert.alert(
+              remoteMessage.data.title,
+              remoteMessage.data.body,
+              [
+                {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: userId})},
+              ],
+              {cancelable: false},
+            );
+            console.log(remoteMessage.data.screen);
+          } else {
+            if(remoteMessage.data.scheduling_id) {
+              Alert.alert(
+                remoteMessage.data.title,
+                remoteMessage.data.body,
+                [
+                  {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})},
+                ],
+                {cancelable: false},
+              );
+              //console.log(remoteMessage.data.scheduling_id);
+            }
+            if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+              Alert.alert(
+                remoteMessage.data.title,
+                remoteMessage.data.body,
+                [
+                  {text: 'CONFIRMAR', onPress: () => navigation.navigate(remoteMessage.data.screen)},
+                ],
+                {cancelable: false},
+              );
+              //console.log(remoteMessage.data.scheduling_id);
+            }
+          } 
+        });
+        messaging().onNotificationOpenedApp(async remoteMessage => {
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          if(remoteMessage.data.scheduling_id) {
+            navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})
+          }
+          if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+            navigation.navigate(remoteMessage.data.screen)
+          }
+          console.log(remoteMessage.data.scheduling_id);
+        });
+        messaging().setBackgroundMessageHandler(async remoteMessage => {
+          setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
+          if(remoteMessage.data.scheduling_id) {
+            navigation.navigate(remoteMessage.data.screen, {scheduling_id: remoteMessage.data.scheduling_id})
+          }
+          if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
+            navigation.navigate(remoteMessage.data.screen)
+          }
+          console.log(remoteMessage.data.scheduling_id);
+        });
+        return unsubscribe;
+       }, []);
+
+  requestUserPermission = async () => {
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+    if (enabled) {
+      getFcmToken();
+    }
+  }
+
+  getFcmToken = async () => {
+    const fcmToken = await messaging().getToken();
+  }
+  /** FIREBASE NOTIFICATION NAVIGATOR */
 
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" style={styles.statusBar}/>
+        <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="dark-content" style={styles.statusBar}/>
 
-            <View style={{backgroundColor: '#004ba0'}}>
-                <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>
+            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }> */ }
+                <View style={ {backgroundColor: '#1976d2', padding: 10, flexDirection: 'row'} }>
                     <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
                         <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
                     </TouchableOpacity>
                 
                     <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Check-In</Text></View>
                 </View>
-            </View>
 
             <ScrollView style={{
                 flex: 1, 
-                backgroundColor: "#f5f5f5", 
-                borderTopLeftRadius: 30, 
-                borderTopRightRadius: 30}}>
+                backgroundColor: "#f5f5f5"}}>
                     <View style={styles.titleBlock}>
                         <Text style={styles.subnameBlock}>{user.name}</Text>
                     </View>
@@ -275,7 +296,7 @@ export default function Reloadscheduling({ navigation }) {
                                                 scheduling.video_appointment == true ? 
                                                 <TouchableOpacity onPress={ () => realizarCheckin(scheduling.id) } style={styles.primaryButton}>
                                                     <FontAwesomeIcon icon={ faCheckCircle } size={20} color="#fff"/>
-                                                    <Text style={styles.buttonText}>Fazer Check-In Tele</Text>
+                                                    <Text style={styles.buttonText}>Fazer Check-In Teleconsulta</Text>
                                                 </TouchableOpacity> 
                                                 :
                                                 <TouchableOpacity onPress={ () => checkinConsulta(scheduling.id) } style={styles.primaryButton}>
@@ -319,7 +340,7 @@ export default function Reloadscheduling({ navigation }) {
                     }
                 
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 }
 

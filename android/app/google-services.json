@@ -30,6 +30,13 @@
             {
               "client_id": "53226453252-c7clmbts3caetl5tej56o04v1a6pohkg.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "53226453252-m82ralm5rpask2f25bhhmbig8viht50n.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.videoInkless"
+              }
             }
           ]
         }
@@ -59,6 +66,13 @@
             {
               "client_id": "53226453252-c7clmbts3caetl5tej56o04v1a6pohkg.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "53226453252-m82ralm5rpask2f25bhhmbig8viht50n.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.videoInkless"
+              }
             }
           ]
         }

@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Image } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import messaging from '@react-native-firebase/messaging';
 
 import api from '../services/api';
 import baseURL from './Baseurl';
@@ -13,49 +12,6 @@ export default function Exam({ navigation }) {
 
     const [notifications, setNotifications] = useState([]);
     const [notParse, setNotParse] = useState([]);
-
-    /** FIREBASE NOTIFICATION NAVIGATOR */
-    useEffect(() => {
-        requestUserPermission();
-        function loadNotifications() {
-            messaging().onNotificationOpenedApp(async remoteMessage => {
-                console.log('Message:', remoteMessage.data);
-                setNotifications(JSON.stringify(remoteMessage.data));
-            });
-            messaging().onMessage(async remoteMessage => {
-                console.log('Message:', remoteMessage.data);
-                setNotifications(JSON.stringify(remoteMessage.data));
-            });
-            messaging().setBackgroundMessageHandler(async remoteMessage => {
-                console.log('Message:', remoteMessage.data);
-                setNotifications(JSON.stringify(remoteMessage.data));
-            });
-        }
-        loadNotifications();
-    }, []);
-
-  requestUserPermission = async () => {
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-    if (enabled) {
-      getFcmToken()
-      console.log('Authorization status:', authStatus);
-    }
-  }
-
-  getFcmToken = async () => {
-    const fcmToken = await messaging().getToken();
-    if (fcmToken) {
-     console.log(fcmToken);
-     console.log("Your Firebase Token is:", fcmToken);
-    } else {
-     console.log("Failed", "No token received");
-    }
-  }
-  /** FIREBASE NOTIFICATION NAVIGATOR */
     
     return (
         <View style={styles.container}>

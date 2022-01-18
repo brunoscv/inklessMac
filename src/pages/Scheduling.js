@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, StatusBar, Image, TouchableOpacity, ActivityIndicator, PermissionsAndroid, Alert } from 'react-native';
+import { SafeAreaView, View, Text, StyleSheet, StatusBar, Image, TouchableOpacity, ActivityIndicator, PermissionsAndroid, Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faUserCircle, faCheckCircle, faPhoneSquareAlt } from '@fortawesome/free-solid-svg-icons';
 import { ScrollView } from 'react-native-gesture-handler';
+
 import { format, parseISO } from "date-fns";
 import Geolocation from 'react-native-geolocation-service';
 import * as geolib from 'geolib';
+import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import messaging from '@react-native-firebase/messaging';
 
 import api from '../services/api';
 import axios from 'axios';
-import NetInfo from "@react-native-community/netinfo";
-import messaging from '@react-native-firebase/messaging';
 import baseURL from './Baseurl';
 import logo from '../../assets/st.png';
 
@@ -28,6 +29,9 @@ export default function Scheduling({ navigation }) {
     const [callLoading, setCallLoading] = useState(false);
     const [connState, setConnState] = useState(0);
     const [response, setResponse] = useState([]);
+    const [userId, setUserId] = useState('');
+    const [user, setUser] = useState('');
+    const [username, setUsername] = useState('');
 
     useEffect(() => {
         NetInfo.fetch().then(state => {
@@ -42,6 +46,117 @@ export default function Scheduling({ navigation }) {
           unsubscribe();
         };
     }, []);
+
+    useEffect(() => {
+        async function loadCustomer() {
+          const user_id = await AsyncStorage.getItem('@storage_Key');
+          //const user_id = 30059;
+          const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
+          setUser(response.data.data);
+          setUserId(user_id);
+          
+        }
+        loadCustomer();
+    }, []);
+
+    useEffect(() => {
+        async function loadSchedulings() {
+            const user_id = await AsyncStorage.getItem('@storage_Key');
+            //const user_id = 30059;
+            const response = await api.get('api/mobile/checkinid/' + user_id, { responseType: 'json' });
+            //O response retorna como objeto no Inkless
+            //É preciso dar um cast para array, como é feito abaixo.
+            const arrResponse = []
+            Object.keys(response.data.schedulings).forEach(key => arrResponse.push(response.data.schedulings[key]));
+            //console.log(response.data.schedulings)
+            setSchedulings(arrResponse);
+            setLoading(!loading);
+            setUsername(response.data.name);
+        }
+        loadSchedulings();
+    }, []);
+
+    async function verifyLocationPermission() {
+        try {
+            if(Platform.OS == 'ios') {
+                Geolocation.requestAuthorization('whenInUse').then((res) => {
+                    console.log(res);
+                    setHasLocationPermission(true);
+                  });
+            } else {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+                );
+                if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                    setHasLocationPermission(true);
+                } else {
+                    setHasLocationPermission(false);
+                }
+            }
+        } catch (err) {
+          console.warn(err);
+        }
+    }
+
+    async function realizarCheckin(scheduling_id) {
+        setAlertLoading(true);
+        const response = await api.get('api/inklessapp/schedulingcheckin/' + scheduling_id, { responseType: 'json' });
+        const message = JSON.stringify(response.data);
+        if(response.status = 200) {
+            setAlertLoading(false);
+            console.log(loading);
+            Alert.alert("", response.data.message, [
+                {
+                    text: "CONFIRMAR",
+                    onPress: () => navigation.navigate('Reloadscheduling')
+                }
+            ]);
+        } else {
+            setAlertLoading(false);
+            Alert.alert("Houve um erro", "Check-In não pôde ser realizado", [
+                {
+                    text: "CONFIRMAR",
+                    onPress: () => navigation.navigate('Reloadscheduling')
+                }
+            ]);
+        } 
+    }
+
+    async function checkinConsulta(scheduling_id) {
+        verifyLocationPermission();
+        Geolocation.getCurrentPosition(
+            ( position ) => {
+                const dist = geolib.getDistance(position.coords, {
+                    latitude: -5.091214,
+                    longitude: -42.806561,
+                });
+                if(dist > 200) {
+                    Alert.alert(
+                        "CONFIRMAÇÃO",
+                        "Você precisa estar próximo ao local da consulta para realizar o Check-In",
+                        [
+                          {text: 'CONFIRMAR'},
+                        ],
+                        {cancelable: false},
+                      );
+                }
+                if(dist <= 200) {
+                    realizarCheckin(scheduling_id);
+                }
+            },
+            () => {
+                Alert.alert(
+                    "CONFIRMAÇÃO",
+                    "Não foi possível obter sua localização. Por favor verique suas permissões e/ou conexão com Internet",
+                    [
+                      {text: 'CONFIRMAR'},
+                    ],
+                    {cancelable: false},
+                  );
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        ); 
+    }
 
     /** FIREBASE NOTIFICATION NAVIGATOR */
     useEffect(() => {
@@ -126,136 +241,30 @@ export default function Scheduling({ navigation }) {
     const fcmToken = await messaging().getToken();
   }
   /** FIREBASE NOTIFICATION NAVIGATOR */
-
-    async function verifyLocationPermission() {
-        try {
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-          );
-          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            setHasLocationPermission(true);
-          } else {
-            setHasLocationPermission(false);
-          }
-        } catch (err) {
-          console.warn(err);
-        }
-    }
-
-    async function realizarCheckin(scheduling_id) {
-        setAlertLoading(true);
-        const response = await api.get('api/inklessapp/schedulingcheckin/' + scheduling_id, { responseType: 'json' });
-        const message = JSON.stringify(response.data);
-        if(response.status = 200) {
-            setAlertLoading(false);
-            console.log(loading);
-            Alert.alert("", response.data.message, [
-                {
-                    text: "CONFIRMAR",
-                    onPress: () => navigation.navigate('Reloadscheduling')
-                }
-            ]);
-        } else {
-            setAlertLoading(false);
-            Alert.alert("Houve um erro", "Check-In não pôde ser realizado", [
-                {
-                    text: "CONFIRMAR",
-                    onPress: () => navigation.navigate('Reloadscheduling')
-                }
-            ]);
-        } 
-    }
-
-    async function checkinConsulta(scheduling_id) {
-        verifyLocationPermission();
-        Geolocation.getCurrentPosition(
-            ( position ) => {
-                const dist = geolib.getDistance(position.coords, {
-                    latitude: -5.091214,
-                    longitude: -42.806561,
-                });
-                if(dist > 200) {
-                    Alert.alert(
-                        "CONFIRMAÇÃO",
-                        "Você precisa estar próximo ao local da consulta para realizar o Check-In",
-                        [
-                          {text: 'CONFIRMAR'},
-                        ],
-                        {cancelable: false},
-                      );
-                }
-                if(dist <= 200) {
-                    realizarCheckin(scheduling_id);
-                }
-            },
-            () => {
-                Alert.alert(
-                    "CONFIRMAÇÃO",
-                    "Não foi possível obter sua localização. Por favor verique suas permissões e/ou conexão com Internet",
-                    [
-                      {text: 'CONFIRMAR'},
-                    ],
-                    {cancelable: false},
-                  );
-            }
-        ); 
-    }
-
-    const [userId, setUserId] = useState('');
-    const [user, setUser] = useState('');
-    useEffect(() => {
-      async function loadCustomer() {
-        const user_id = await AsyncStorage.getItem('@storage_Key');
-        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
-        setUser(response.data.data);
-        setUserId(user_id);
-        
-      }
-      loadCustomer();
-    }, []);
-
-    const [username, setUsername] = useState('');
-    useEffect(() => {
-        async function loadSchedulings() {
-            const user_id = await AsyncStorage.getItem('@storage_Key');
-            const response = await api.get('api/mobile/checkinid/' + user_id, { responseType: 'json' });
-            //O response retorna como objeto no Inkless
-            //É preciso dar um cast para array, como é feito abaixo.
-            const arrResponse = []
-            Object.keys(response.data.schedulings).forEach(key => arrResponse.push(response.data.schedulings[key]));
-            //console.log(response.data.schedulings)
-            setSchedulings(arrResponse);
-            setLoading(!loading);
-            setUsername(response.data.name);
-        }
-        loadSchedulings();
-    }, []);
-
+  
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" style={styles.statusBar}/>
+        <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="dark-content" style={styles.statusBar}/>
 
-            <View style={{backgroundColor: '#004ba0'}}>
-                <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>
+            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }> */ }
+                <View style={ {backgroundColor: '#1976d2', padding: 10, flexDirection: 'row'} }>
                     <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
                         <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
                     </TouchableOpacity>
                 
                     <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Check-In</Text></View>
                 </View>
-            </View>
 
             <ScrollView style={{
                 flex: 1, 
-                backgroundColor: "#f5f5f5", 
-                borderTopLeftRadius: 30, 
-                borderTopRightRadius: 30}}>
+                backgroundColor: "#f5f5f5"}}>
                     <View style={styles.titleBlock}>
                         <Text style={styles.subnameBlock}>{user.name}</Text>
                     </View>
                     <View>
                         <Text style={{paddingHorizontal: 10, paddingVertical: 20}}>Todos os check-ins</Text>
                     </View>
+                    
                     {!loading ? 
                         schedulings.length > 0 ? 
                             schedulings.map(scheduling => 
@@ -344,9 +353,10 @@ export default function Scheduling({ navigation }) {
                         <Text style={{color: '#222', marginVertical: 10}}>Carregando ...</Text>
                     </View>
                     }
+                        
                 
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -358,14 +368,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
     },
     statusBar: {
-        backgroundColor: '#1976d2',
+        backgroundColor: '#004ba0',
         color: '#fff'
     },
     actionsBlock: {
-        backgroundColor: '#1976d2',
+        backgroundColor: '#004ba0',
     },
     backBlock: {
-        backgroundColor: '#1976d2',
+        backgroundColor: '#004ba0',
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
@@ -373,7 +383,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     titleBlock: {
-        backgroundColor: '#004ba0',
+        backgroundColor: '#1976d2',
         padding: 15,
         borderBottomLeftRadius: 15,
         borderBottomRightRadius: 15
