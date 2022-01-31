@@ -53,6 +53,10 @@ export default function Attendance({ navigation }) {
                 console.log('Message:', remoteMessage.data);
                 setNotifications(JSON.stringify(remoteMessage.data));
             });
+            messaging().setBackgroundMessageHandler(async remoteMessage => {
+                console.log('Message:', remoteMessage.data);
+                setNotifications(JSON.stringify(remoteMessage.data));
+            });
         }
         loadNotifications();
     }, []);

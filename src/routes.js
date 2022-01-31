@@ -2,7 +2,7 @@ import { createAppContainer, createSwitchNavigator} from 'react-navigation';
 
 import Menu from './pages/Menu';
 import Login from './pages/Login';
-import Rating from './pages/Rating';
+import Satisfaction from './pages/Satisfaction';
 import Users from './pages/Users';
 import CodeRequest from './pages/CodeRequest';
 import CodeConfirm from './pages/CodeConfirm';
@@ -21,7 +21,7 @@ const Routes = createAppContainer(
     createSwitchNavigator({
         Menu,
         Login,
-        //Rating,
+        Satisfaction,
         Users,
         CodeRequest,
         CodeConfirm,

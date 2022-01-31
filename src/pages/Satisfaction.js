@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { Alert, SafeAreaView, View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, ActivityIndicator, Modal } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faClock, faBookReader, faAngry, faMeh, faLaugh, faGrinHearts} from '@fortawesome/free-solid-svg-icons';
 
@@ -12,7 +12,7 @@ import axios from 'axios';
 import baseURL from './Baseurl';
 
 
-export default function Rating({ navigation }) {
+export default function Satisfaction({ navigation }) {
 
     function goToMenu() {
         //const response = await api.get()
@@ -23,6 +23,24 @@ export default function Rating({ navigation }) {
     const [notifications, setNotifications] = useState([]);
     const [notParse, setNotParse] = useState([]);
     const agendamento = navigation.getParam('scheduling_id', '0');
+    const [callLoading, setCallLoading] = useState(false);
+    const [connState, setConnState] = useState(0);
+    const [response, setResponse] = useState([]);
+
+    useEffect(() => {
+        NetInfo.fetch().then(state => {
+          setConnState(state);
+        });
+    
+        const unsubscribe = NetInfo.addEventListener(state => {
+          setConnState(state);
+        });
+    
+        return () => {
+          unsubscribe();
+        };
+    }, []);
+
     /** FIREBASE NOTIFICATION NAVIGATOR */
     useEffect(() => {
         requestUserPermission();
@@ -64,14 +82,69 @@ export default function Rating({ navigation }) {
      console.log("Failed", "No token received");
     }
   }
+
+    async function handle(rating, id) {
+        setCallLoading(true);
+        const data = {
+            message_id: id,
+            satisfaction: rating, 
+        };
+
+    
+        const config = {
+            method: "put",
+            url: 'https://demo.denarius.digital/api/mobile/satisfaction/update',
+            data: JSON.stringify(data),
+            headers: { "content-type": "application/json" }
+        };
+        console.log(config.url);
+
+        if (connState.isConnected == true) {
+            const responsed = await axios(config);
+            if( responsed.status == 200 ) {
+            setResponse(responsed);
+            setCallLoading(false);
+            console.log(responsed);
+            Alert.alert(
+                "Confirmação",
+                "A avaliação foi realizada com sucesso! Obrigado!",
+                [
+                {text: 'CONFIRMAR', onPress: () => navigation.navigate("Menu")},
+                ],
+                {cancelable: false},
+            );
+            //Alert.alert("Contato", "A teleconsulta foi confirmada com sucesso! Clique no botão 'Atender Chamada' para iniciar o seu atendimento");
+            } else {
+            Alert.alert(
+                "Conexão",
+                "Verifique os dados digitados e tente novamente!",
+                [
+                {text: 'ENTENDIDO'},
+                ],
+            );
+            }
+        } else {
+            setCallLoading(false);
+            Alert.alert(
+                "Conexão",
+                "Detectamos que você não possui conexão ativa com a Internet. Por favor tente novamente!",
+                [
+                {text: 'ENTENDIDO'},
+                ],
+            );
+        }
+    }
+
+
+
   /** FIREBASE NOTIFICATION NAVIGATOR */
     const [attendances, setAttendances] = useState([]);
     const [loading, setLoading] = useState(true);
     useEffect(() => {
     async function loadAttendances() {
-        //const user_id = await AsyncStorage.getItem('@storage_Key');
-        const user_id = 30059;
-        const response = await api.get('api/mobile/messageapps/search/' + user_id, { responseType: 'json' });
+        const user_id = await AsyncStorage.getItem('@storage_Key') || 30059;
+        //const user_id = 30059;
+        const response = await api.get('api/mobile/messageapps/satisfaction/search/' + user_id, { responseType: 'json' });
         
         //O response retorna como objeto no Inkless
         //É preciso dar um cast para array, como é feito abaixo.
@@ -85,18 +158,20 @@ export default function Rating({ navigation }) {
     loadAttendances();
   }, []);
   const renderElements = (attendances) => {
-    if(attendances == '' || attendances == null) {
+    if(attendances == '' || attendances == null ) {
       return (
+          
         <View style={{
           flex: 1,
-          backgroundColor: '#fff', 
+          backgroundColor: '#004ba0', 
           marginHorizontal: 10,
           marginVertical: '30%',
           paddingHorizontal: 14,
           paddingVertical: 10,
           borderRadius: 20,
           alignItems: 'center', justifyContent: 'center'}}>
-          <Text style={{color: '#222', marginVertical: 10}}>Não há mensagens</Text>
+            <Text style={{fontSize: 22, color: '#fff'}}>Avaliação de Atendimento</Text>
+            <Text style={{color: '#fff', marginVertical: 10, fontSize: 22, fontWeight: 'bold'}}>Não há avaliações disponíveis no momento. </Text>
         </View>
       );
     } else {
@@ -110,28 +185,28 @@ export default function Rating({ navigation }) {
                     <Image style={{width: 200, height:200, borderRadius: 200 / 2}} source={{uri: baseURL + 'storage/' + attendance.image}}/>
                 </View>
                 <View style={{paddingHorizontal: 20}}>
-                    <Text style={{fontSize: 16, color: '#fff', paddingVertical: 20}}>Olá, eu sou JANIELLY SILVA ANDRADE, você recomendaria os nossos serviços para um amigo ou familiar?</Text>
+                    <Text style={{fontSize: 16, color: '#fff', paddingVertical: 20}}>{attendance.body}</Text>
                 </View>
                 <View style={styles.firstrow}>
-                    <TouchableOpacity onPress={ () => navigation.navigate('Scheduling') } style={styles.button}>
+                    {!callLoading ? <TouchableOpacity onPress={ () => handle(0, attendance.id) } style={styles.button}>
                         <FontAwesomeIcon icon={ faAngry } size={20} color="#fff"/>
                         <Text style={styles.buttonText}>Odiei</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> : <ActivityIndicator size="small" color="#fff"/> }
 
-                    <TouchableOpacity onPress={ () => navigation.navigate('Historic') } style={styles.button}>
+                    {!callLoading ? <TouchableOpacity onPress={ () => handle(1, attendance.id) } style={styles.button}>
                         <FontAwesomeIcon icon={ faMeh } size={20} color="#fff"/>
                         <Text style={styles.buttonText}>Razoável</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> : <ActivityIndicator size="small" color="#fff"/> }
 
-                    <TouchableOpacity onPress={ () => navigation.navigate('Historic') } style={styles.button}>
+                    {!callLoading ? <TouchableOpacity onPress={ () => handle(2, attendance.id) } style={styles.button}>
                         <FontAwesomeIcon icon={ faLaugh } size={20} color="#fff"/>
                         <Text style={styles.buttonText}>Gostei</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> : <ActivityIndicator size="small" color="#fff"/> }
 
-                    <TouchableOpacity onPress={ () => navigation.navigate('Historic') } style={styles.button}>
+                    {!callLoading ? <TouchableOpacity onPress={ () => handle(3, attendance.id) } style={styles.button}>
                         <FontAwesomeIcon icon={ faGrinHearts } size={20} color="#fff"/>
                         <Text style={styles.buttonText}>Adorei</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> : <ActivityIndicator size="small" color="#fff"/> }
 
                 </View>
           </View>   
@@ -155,15 +230,15 @@ export default function Rating({ navigation }) {
                 :
                   <View style={{
                     flex: 1,
-                    backgroundColor: '#fff', 
+                    backgroundColor: '#004ba0', 
                     marginHorizontal: 10,
                     marginVertical: '30%',
                     paddingHorizontal: 14,
                     paddingVertical: 10,
                     borderRadius: 20,
                     alignItems: 'center', justifyContent: 'center'}}>
-                    <ActivityIndicator size="large" color="#0000ff"/>
-                    <Text style={{color: '#222', marginVertical: 10}}>Carregando ...</Text>
+                    <ActivityIndicator size="large" color="#fff"/>
+                    <Text style={{color: '#fff', marginVertical: 10, fontSize: 15, fontWeight: 'bold'}}>Carregando ...</Text>
                   </View>
                   
                 }
@@ -288,7 +363,7 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         color:'#fff',
-        fontSize: 13,
+        fontSize: 12,
         marginHorizontal: 10
     },
     firstrow: {

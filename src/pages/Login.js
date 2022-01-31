@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, KeyboardAvoidingView, Platform, Image, StyleSheet, Text, TextInput, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faAngleRight } from '@fortawesome/free-solid-svg-icons';
+import { faAngleRight, faAngry, faStar } from '@fortawesome/free-solid-svg-icons';
 import { TextInputMask } from 'react-native-masked-text';
 
 import Moment from 'moment';
@@ -208,6 +208,12 @@ export default function Login({ navigation }) {
               </TouchableOpacity>
             </View>
           </View>
+          <View>
+            <TouchableOpacity onPress={ () => navigation.navigate('Satisfaction') } style={styles.ratingButton}>
+              <FontAwesomeIcon icon={ faStar } size={20} color="#fff"/>
+              <Text style={styles.buttonRatingText}>Avaliações</Text>
+            </TouchableOpacity>
+            </View>
         </KeyboardAvoidingView>
       );
 }
@@ -249,6 +255,22 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 4
+    },
+    ratingButton: {
+      height: 60,
+      backgroundColor: '#1976d2',
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: 4,
+      borderWidth:1,
+      borderColor:'rgba(255,255,255,1)',
+      padding: 5,
+      marginTop: 20
+    },
+    buttonRatingText: {
+      color: '#fff',
+      fontWeight: 'bold',
+      fontSize: 13
     },
     buttonText: {
         color: '#1976d2',
