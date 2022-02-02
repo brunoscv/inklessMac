@@ -223,6 +223,19 @@ export default function Scheduling({ navigation }) {
           }
           console.log(remoteMessage.data.scheduling_id);
         });
+        // Check whether an initial notification is available
+        messaging()
+        .getInitialNotification()
+        .then(async remoteMessage => {
+        if (remoteMessage) {
+            console.log(
+            'Notification caused app to open from quit state:',
+            remoteMessage.notification,
+            );
+            setInitialRoute(remoteMessage.data.screen); // e.g. "Settings"
+        }
+        
+        });
         return unsubscribe;
        }, []);
 

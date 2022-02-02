@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, View, StyleSheet, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faClock, faBookReader, faFile, faFolder, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
+import { faClock, faStar, faBookReader, faFile, faFolder, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import messaging from '@react-native-firebase/messaging';
@@ -154,25 +154,31 @@ export default function Menu({ navigation }) {
       <View style={styles.content}>
         <View style={styles.firstrow}>
           <TouchableOpacity onPress={ () => navigation.navigate('Scheduling') } style={styles.button}>
-            <FontAwesomeIcon icon={ faClock } size={80} color="#fff"/>
+            <FontAwesomeIcon icon={ faClock } size={60} color="#fff"/>
             <Text style={styles.buttonText}>Check-In</Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={ () => navigation.navigate('Historic') } style={styles.button}>
-            <FontAwesomeIcon icon={ faBookReader } size={80} color="#fff"/>
+            <FontAwesomeIcon icon={ faBookReader } size={60} color="#fff"/>
             <Text style={styles.buttonText}>Agendamentos</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.secondrow}>
           <TouchableOpacity onPress={ () => navigation.navigate('Report') } style={styles.button}>
-            <FontAwesomeIcon icon={ faFile } size={80} color="#fff"/>
+            <FontAwesomeIcon icon={ faFile } size={60} color="#fff"/>
             <Text style={styles.buttonText}>Laudos</Text>
           </TouchableOpacity>
           
           <TouchableOpacity onPress={ () => navigation.navigate('Document') } style={styles.button}>
-            <FontAwesomeIcon icon={ faFolder } size={80} color="#fff"/>
+            <FontAwesomeIcon icon={ faFolder } size={60} color="#fff"/>
             <Text style={styles.buttonText}>Documentos</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.thirdrow}>
+          <TouchableOpacity onPress={ () => navigation.navigate('Satisfaction') } style={styles.button}>
+            <FontAwesomeIcon icon={ faStar } size={60} color="#fff"/>
+            <Text style={styles.buttonText}>Avaliações</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -223,8 +229,8 @@ const styles = StyleSheet.create({
 
   },
   button: {
-    height:160,
-    width:160,
+    height:150,
+    width:150,
     backgroundColor: '#29b6f6',
     justifyContent: 'center',
     alignItems: 'center',
