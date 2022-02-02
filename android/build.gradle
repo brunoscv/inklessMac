@@ -38,7 +38,8 @@ allprojects {
         //maven { url 'https://www.jitpack.io' }
         /*maven {
             //url "http://tokbox.bintray.com/maven"
-            url "https://tokbox-telefonica.bintray.com/maven"
+            //url "https://tokbox-telefonica.bintray.com/maven"
+            url "https://repo1.maven.org/maven2"
             
         }*/
 
