@@ -140,7 +140,7 @@ export default function Scheduling({ navigation }) {
                         {cancelable: false},
                       );
                 }
-                if(dist <= 2000000000000000000000) {
+                if(dist <= 200) {
                     realizarCheckin(scheduling_id);
                 }
             },
@@ -244,11 +244,6 @@ export default function Scheduling({ navigation }) {
    await messaging().getToken();
   }
   /** FIREBASE NOTIFICATION NAVIGATOR */
-  useEffect(() => {
-    BackHandler.addEventListener('hardwareBackPress', () => true);
-    return () =>
-      BackHandler.removeEventListener('hardwareBackPress', () => true);
-  }, []);
 
     return (
         <SafeAreaView style={styles.container}>

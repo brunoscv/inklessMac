@@ -26,12 +26,6 @@ export default function Users({ route, navigation }) {
     const [response, setResponse] = useState([]);
     const [ loginUsers, setLoginUsers ] = useState();
     const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        BackHandler.addEventListener('hardwareBackPress', () => true);
-        return () =>
-          BackHandler.removeEventListener('hardwareBackPress', () => true);
-      }, []);
     
     useEffect(() => {
         async function loadUsers() {

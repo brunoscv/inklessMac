@@ -106,12 +106,6 @@ export default function Video({ route, navigation }) {
     navigation.navigate('Scheduling');
   }
 
-  useEffect(() => {
-    BackHandler.addEventListener('hardwareBackPress', () => true);
-    return () =>
-      BackHandler.removeEventListener('hardwareBackPress', () => true);
-  }, []);
-
   return (
     <View style={{ flex: 1, backgroundColor: '#000'}}>
       <View style={{ flex: 1, flexDirection: 'row' }}>

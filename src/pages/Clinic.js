@@ -41,12 +41,6 @@ export default function Clinic({ route, navigation }) {
         });   
     }, [navigation]);
 
-    useEffect(() => {
-        BackHandler.addEventListener('hardwareBackPress', () => true);
-        return () =>
-          BackHandler.removeEventListener('hardwareBackPress', () => true);
-      }, []);
-
     /** FIREBASE NOTIFICATION NAVIGATOR */
     useEffect(() => {
         requestUserPermission();

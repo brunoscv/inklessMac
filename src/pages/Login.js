@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useHeaderHeight } from '@react-navigation/stack';
-import { View, KeyboardAvoidingView, Platform, Image, StyleSheet, Text, TextInput, ActivityIndicator, TouchableOpacity, Alert, TouchableWithoutFeedback } from 'react-native';
+import { View, KeyboardAvoidingView, Platform, Image, StyleSheet, Text, TextInput, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faAngleRight, faAngry, faStar } from '@fortawesome/free-solid-svg-icons';
 import { TextInputMask } from 'react-native-masked-text';
@@ -12,8 +11,6 @@ import messaging from '@react-native-firebase/messaging';
 
 import api from '../services/api';
 import logo from '../../assets/inkless.png';
-
-import { BackHandler } from 'react-native';
 
 export default function Login({ navigation }) {
 
@@ -28,12 +25,6 @@ export default function Login({ navigation }) {
     const [cpfUnmaskedField, setCpfUnmaskedField] = useState('');
     const [nascUnmaskedField, setNascUnmaskedField] = useState('');
     const [isLogedin, setIsLogedin] = useState(false);
-
-    useEffect(() => {
-      BackHandler.addEventListener('hardwareBackPress', () => true);
-      return () =>
-        BackHandler.removeEventListener('hardwareBackPress', () => true);
-    }, []);
 
     useEffect(() => {
       NetInfo.fetch().then(state => {
@@ -148,10 +139,7 @@ export default function Login({ navigation }) {
     }
 
     return (
-        <View style={styles.container}>
-        <KeyboardAvoidingView 
-        {...(Platform.OS === 'ios' && { behavior: 'padding' }) }
-        style={{flex: 1}}>
+        <KeyboardAvoidingView enabled={Platform.OS == 'ios'} behavior="padding" style={styles.container}>
           <Image source={logo} style={styles.logo}/>
     
           <View style={styles.form}>
@@ -206,27 +194,24 @@ export default function Login({ navigation }) {
             </View>
           </View>
         </KeyboardAvoidingView>
-        </View>
       );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
         backgroundColor: '#1976d2',
     },
     logo: {
         width: 155,
-        height: 140,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginHorizontal: 130,
-        marginVertical: 40 
+        height: 140
     },
     form: {
         alignSelf: 'stretch',
         paddingHorizontal: 30,
-       
+        marginTop: 30
     },
     label: {
         fontWeight: 'bold',

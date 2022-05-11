@@ -43,12 +43,6 @@ export default function Attendance({ route, navigation }) {
             ),     
         });   
     }, [navigation]);
-
-    useEffect(() => {
-        BackHandler.addEventListener('hardwareBackPress', () => true);
-        return () =>
-          BackHandler.removeEventListener('hardwareBackPress', () => true);
-      }, []);
     
     useEffect(() => {
       async function loadCustomer() {

@@ -20,12 +20,6 @@ export default function Report({ navigation }) {
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState('');
     const [user, setUser] = useState('');
-
-    useEffect(() => {
-      BackHandler.addEventListener('hardwareBackPress', () => true);
-      return () =>
-        BackHandler.removeEventListener('hardwareBackPress', () => true);
-    }, []);
     
     useEffect(() => {
         async function loadCustomer() {

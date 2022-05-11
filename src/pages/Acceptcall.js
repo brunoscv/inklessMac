@@ -32,12 +32,6 @@ export default function Acceptcall({ route, navigation }) {
     const [agendamento_id, setAgedamento] = useState('');
     const agendamento = route.params?.scheduling_id;
     //const agendamento = 452;
-
-    useEffect(() => {
-        BackHandler.addEventListener('hardwareBackPress', () => true);
-        return () =>
-          BackHandler.removeEventListener('hardwareBackPress', () => true);
-      }, []);
     
     useEffect(() => {
       async function loadCustomer() {
