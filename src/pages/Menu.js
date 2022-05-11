@@ -11,34 +11,29 @@ import baseURL from './Baseurl';
 import axios from 'axios';
 import userLogo from '../../assets/user.png';
 
+import { BackHandler } from 'react-native';
+
 export default function Menu({ navigation }) {
   const [scheduling, setScheduling] = useState(0);
   const [userId, setUserId] = useState('');
   const [user, setUser] = useState('');
 
   useEffect(() => {
-    async function loadCustomer() {
-      const user_id = await AsyncStorage.getItem('@storage_Key');
-      //const user_id = 30059;
-      const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
-      setUser(response.data.data);
-      setUserId(user_id);
-      
-    }
-    loadCustomer();
+    BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () =>
+      BackHandler.removeEventListener('hardwareBackPress', () => true);
   }, []);
 
   useEffect(() => {
-    async function getMyStringValue() {
-      try {
-        const logged = await AsyncStorage.getItem('@storage_Key');
-        if (logged == null || logged == "" || !logged) {
-          navigation.navigate('Login');
-        }
-      } catch(e) {}
-    }
-    getMyStringValue();
-  }, []);
+      async function loadCustomer() {
+        const user_id = await AsyncStorage.getItem('@storage_Key');
+        //const user_id = 30059;
+        const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
+        setUser(response.data.data);
+        setUserId(user_id);
+      }
+      loadCustomer();
+    }, []);
 
   async function removeValue() {
     try {
@@ -51,9 +46,7 @@ export default function Menu({ navigation }) {
   useEffect(() => {
     requestUserPermission();
     const unsubscribe = messaging().onMessage(async remoteMessage => {
-      //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
       setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
-        //console.log(remoteMessage.data.screen);
         if(remoteMessage.data.screen == "Attendance" || remoteMessage.data.screen == "Clinic") {
           //Quando a notificação é para o atendimento em guiche e no consultorio, o aplicativo busca o id do customer para fazer 
           //a impressao das informações na tela do usuário.
@@ -66,7 +59,6 @@ export default function Menu({ navigation }) {
             ],
             {cancelable: false},
           );
-          console.log(remoteMessage.data.screen);
         } else {
           if(remoteMessage.data.scheduling_id) {
             Alert.alert(
@@ -77,7 +69,6 @@ export default function Menu({ navigation }) {
               ],
               {cancelable: false},
             );
-            //console.log(remoteMessage.data.scheduling_id);
           }
           if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
             Alert.alert(
@@ -88,7 +79,6 @@ export default function Menu({ navigation }) {
               ],
               {cancelable: false},
             );
-            //console.log(remoteMessage.data.scheduling_id);
           }
         } 
     });
@@ -100,7 +90,6 @@ export default function Menu({ navigation }) {
       if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
         navigation.navigate(remoteMessage.data.screen)
       }
-      console.log(remoteMessage.data.scheduling_id);
     });
     messaging().setBackgroundMessageHandler(async remoteMessage => {
       setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
@@ -110,7 +99,6 @@ export default function Menu({ navigation }) {
       if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
         navigation.navigate(remoteMessage.data.screen)
       }
-      console.log(remoteMessage.data.scheduling_id);
     });
     return unsubscribe;
    }, []);
@@ -123,18 +111,11 @@ export default function Menu({ navigation }) {
 
     if (enabled) {
       getFcmToken()
-      console.log('Authorization status:', authStatus);
     }
   }
 
   getFcmToken = async () => {
-    const fcmToken = await messaging().getToken();
-    if (fcmToken) {
-    //  console.log(fcmToken);
-     console.log("Your Firebase Token is:", fcmToken);
-    } else {
-     console.log("Failed", "No token received");
-    }
+    await messaging().getToken();
   }
   /** FIREBASE NOTIFICATION NAVIGATOR */
 

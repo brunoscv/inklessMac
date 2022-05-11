@@ -12,9 +12,13 @@ import api from '../services/api';
 import baseURL from './Baseurl';
 import axios from 'axios';
 
-// import { Container } from './styles';
+import messaging from '@react-native-firebase/messaging';
+import { BackHandler } from 'react-native';
 
-export default function Acceptcall({ navigation }) {
+// import { Container } from './styles';
+import Scheduling from './Scheduling';
+
+export default function Acceptcall({ route, navigation }) {
 
     const [schedulings, setSchedulings] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -25,27 +29,29 @@ export default function Acceptcall({ navigation }) {
     const [response, setResponse] = useState([]);
     const [showText, setShowText] = useState(true);
     const [user, setUser] = useState('');
-    const agendamento = navigation.getParam('scheduling_id', '0');
+    const [agendamento_id, setAgedamento] = useState('');
+    const agendamento = route.params?.scheduling_id;
     //const agendamento = 452;
+
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
     
     useEffect(() => {
       async function loadCustomer() {
         const user_id = await AsyncStorage.getItem('@storage_Key');
         const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
         setUser(response.data.data);
-        
+
+        const teste = await AsyncStorage.getItem('@scheduling_Id');
+        const sc = await api.get('api/mobile/scheduling/' + teste, { responseType: 'json' });
+        setSchedulings(sc);
+        setLoading(!loading);
+        setAgedamento(teste);
       }
       loadCustomer();
-    }, []);
-
-    useEffect(() => {
-        async function loadSchedulings() {
-            const response = await api.get('api/mobile/scheduling/' + agendamento, { responseType: 'json' });
-            setSchedulings(response);
-            setLoading(!loading);
-            console.log(response.data);
-        }
-        loadSchedulings();
     }, []);
 
     useEffect(() => {
@@ -70,13 +76,49 @@ export default function Acceptcall({ navigation }) {
         };
     }, []);
 
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
+
+    /** FIREBASE NOTIFICATION NAVIGATOR */
+    useEffect(() => {
+        requestUserPermission();
+        const unsubscribe = messaging().onMessage(async remoteMessage => {
+        console.log("ta aqui, app aberto")
+        });
+        messaging().onNotificationOpenedApp(async remoteMessage => {
+        console.log(remoteMessage)
+        });
+        messaging().setBackgroundMessageHandler(async remoteMessage => {
+        console.log(remoteMessage)
+        });
+        return unsubscribe;
+    }, []);
+
+    requestUserPermission = async () => {
+        const authStatus = await messaging().requestPermission();
+        const enabled =
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+        if (enabled) {
+        getFcmToken()
+        }
+    }
+
+    getFcmToken = async () => {
+        await messaging().getToken();
+    }
+
     async function handle(scheduling_id) {
+        const teste = await AsyncStorage.getItem('@scheduling_Id');
         setCallLoading(true);
         const data = {
             id: scheduling_id,
             meet_call: true, 
         };
-
         
         const config = {
             method: "put",
@@ -84,7 +126,7 @@ export default function Acceptcall({ navigation }) {
             data: JSON.stringify(data),
             headers: { "content-type": "application/json" }
         };
-        console.log(config.url);
+       
 
         if (connState.isConnected == true) {
             const responsed = await axios(config);
@@ -92,15 +134,15 @@ export default function Acceptcall({ navigation }) {
               setResponse(responsed);
               setCallLoading(false);
               setConfirmation(true);
-              console.log(responsed);
               Alert.alert(
                 "Confirmação",
                 "A teleconsulta foi confirmada com sucesso! Clique no botão 'Atender Chamada' para iniciar o seu atendimento",
                 [
-                  {text: 'ATENDER CHAMADA', onPress: () => navigation.navigate("Reloadcall", { scheduling_id: agendamento })},
+                  {text: 'ATENDER CHAMADA', onPress: () => navigation.navigate("Reloadcall", { scheduling_id: teste })},
                 ],
                 {cancelable: false},
               );
+
               //Alert.alert("Contato", "A teleconsulta foi confirmada com sucesso! Clique no botão 'Atender Chamada' para iniciar o seu atendimento");
             } else {
               Alert.alert(
@@ -129,7 +171,7 @@ export default function Acceptcall({ navigation }) {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" style={styles.statusBar}/>
 
-            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }> */ }
+            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>  */ }
                 <View style={ {backgroundColor: '#1976d2', padding: 10, flexDirection: 'row'} }>
                     <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
                         <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
@@ -137,7 +179,6 @@ export default function Acceptcall({ navigation }) {
                 
                     <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Teleconsulta</Text></View>
                 </View>
-            
             <ScrollView style={{
                 flex: 1, 
                 backgroundColor: "#f5f5f5"}}>
@@ -189,7 +230,7 @@ export default function Acceptcall({ navigation }) {
                                                 </TouchableOpacity>
                                             : 
                                             <View> 
-                                                <TouchableOpacity  onPress={ () => handle(agendamento) } style={styles.primaryButton}>
+                                                <TouchableOpacity  onPress={ () => handle(agendamento_id) } style={styles.primaryButton}>
                                                 {callLoading ? <ActivityIndicator size="small" color="#0000ff" style={{alignItems: 'center', justifyContent: 'center'}}/> : <FontAwesomeIcon icon={ faVideo } size={20} color="#fff"/>}
                                                     <Text style={styles.buttonText}>Confirmar Chamada</Text>
                                                 </TouchableOpacity>

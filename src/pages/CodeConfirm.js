@@ -20,9 +20,11 @@ import axios from 'axios';
 
 import { ScrollView } from 'react-native-gesture-handler';
 
-export default function CodeConfirm({ navigation }) {
+import { BackHandler } from 'react-native';
 
-    const user_id = navigation.getParam('user_id', '30059');
+export default function CodeConfirm({ route, navigation }) {
+
+    const user_id = route.params?.user_id;
 
     const [connState, setConnState] = useState(0);
     const [response, setResponse] = useState([]);
@@ -32,6 +34,12 @@ export default function CodeConfirm({ navigation }) {
     const [user, setUser] = useState('');
 
     //	"verification_code": "719633",
+
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
     
     useEffect(() => {
         async function loadCustomer() {
@@ -73,7 +81,6 @@ export default function CodeConfirm({ navigation }) {
         const response = await api.get('api/customer/'+ user_id, { responseType: 'json' });
         if (response.data['data'] > '0') {
             setLoading(true);
-            console.log("code: " + response.data["data"]["verification_code"])
             if (connState.isConnected == true) {
                 if (response.data["data"]["verification_code"] == value) {
                     
@@ -84,6 +91,7 @@ export default function CodeConfirm({ navigation }) {
                         storeData(JSON.stringify(user_id));
                         setLoading(false);
                         navigation.navigate('Menu', { user_id: user_id});
+                        //navigation.popToTop();
                     } else {
                         Alert.alert("Conexão", "Verifique os dados digitados e tente novamente!");
                     }   
@@ -175,7 +183,7 @@ export default function CodeConfirm({ navigation }) {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" style={styles.statusBar}/>
 
-            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }> */ }
+            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>
                 <View style={ {backgroundColor: '#1976d2', padding: 10, flexDirection: 'row'} }>
                     <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
                         <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
@@ -183,7 +191,7 @@ export default function CodeConfirm({ navigation }) {
                 
                     <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Confirmar Código</Text></View>
                 </View>
-
+             */ }
                 {!loading ?
                         renderElements()
                         :

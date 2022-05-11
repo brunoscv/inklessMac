@@ -5,13 +5,14 @@ import { OTSession, OTPublisher, OTSubscriber, OT } from 'opentok-react-native';
 
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faVideo, faMicrophone, faAngleLeft, faMicrophoneSlash, faVideoSlash, faPhoneSlash } from '@fortawesome/free-solid-svg-icons';
+import { BackHandler } from 'react-native';
 
-export default function Video({ navigation }) {
+export default function Video({ route, navigation }) {
   
   const otSessionRef = useRef(OTSession);
-  const apiKey = navigation.getParam('apiKey', 'Anonimo');
-  const sessionId = navigation.getParam('sessionId', 'Anonimo');
-  const tokenId = navigation.getParam('tokenId', 'Anonimo');
+  const apiKey = route.params?.apiKey;
+  const sessionId = route.params?.sessionId;
+  const tokenId = route.params?.tokenId;
   const dimensions = {
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height,
@@ -38,11 +39,15 @@ export default function Video({ navigation }) {
   const sessionEventHandlers = {
     connectionCreated: (event) => {
       console.log('connection created', event);
+
+      console.log(apiKey);
+      console.log(sessionId);
+      console.log(tokenId);
       //subscriberViewHandler();
     },
     streamDestroyed: event => {
       console.log('Stream destroyeeeeeeeeeed!', event);
-      navigation.navigate('Scheduling');
+      navigation.navigate('Menu');
     },
     connectionDestroyed: (event) => {
       // subscriberViewHandler();
@@ -50,10 +55,14 @@ export default function Video({ navigation }) {
     sessionConnected: (event) => {
       console.log('Session connected!', event);
       console.log(event.connection.connectionId);
+
+      console.log(apiKey);
+      console.log(sessionId);
+      console.log(tokenId);
     },
     sessionDisconnected: (event) => {
       console.log('sessionDisconnected', event);
-      navigation.navigate('Scheduling');
+      navigation.navigate('Menu');
     },
     sessionReconnected: (event) => {
       //subscriberViewHandler();
@@ -64,6 +73,10 @@ export default function Video({ navigation }) {
     },
     streamPropertyChanged: (event) => {
       console.log('Stream changed!', event);
+
+      console.log(apiKey);
+      console.log(sessionId);
+      console.log(tokenId);
     },
     signal: (event) => {
       console.log('Single', event.type);
@@ -92,6 +105,12 @@ export default function Video({ navigation }) {
   const cancelHandler = () => {
     navigation.navigate('Scheduling');
   }
+
+  useEffect(() => {
+    BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () =>
+      BackHandler.removeEventListener('hardwareBackPress', () => true);
+  }, []);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000'}}>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, KeyboardAvoidingView, Platform, Image, StyleSheet, Text, TextInput, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
+import { useHeaderHeight } from '@react-navigation/stack';
+import { View, KeyboardAvoidingView, Platform, Image, StyleSheet, Text, TextInput, ActivityIndicator, TouchableOpacity, Alert, TouchableWithoutFeedback } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faAngleRight, faAngry, faStar } from '@fortawesome/free-solid-svg-icons';
 import { TextInputMask } from 'react-native-masked-text';
@@ -11,6 +12,8 @@ import messaging from '@react-native-firebase/messaging';
 
 import api from '../services/api';
 import logo from '../../assets/inkless.png';
+
+import { BackHandler } from 'react-native';
 
 export default function Login({ navigation }) {
 
@@ -27,9 +30,15 @@ export default function Login({ navigation }) {
     const [isLogedin, setIsLogedin] = useState(false);
 
     useEffect(() => {
+      BackHandler.addEventListener('hardwareBackPress', () => true);
+      return () =>
+        BackHandler.removeEventListener('hardwareBackPress', () => true);
+    }, []);
+
+    useEffect(() => {
       NetInfo.fetch().then(state => {
           setConnState(state);
-          getMyStringValue();
+          //getMyStringValue();
       });
 
       const unsubscribe = NetInfo.addEventListener(state => {
@@ -54,18 +63,10 @@ export default function Login({ navigation }) {
           );
       });
       messaging().onNotificationOpenedApp(remoteMessage => {
-          console.log(
-              'Notification caused app to open from background state:',
-              remoteMessage.data,
-          );
-          navigation.navigate(remoteMessage.data.screen);
+        navigation.navigate(remoteMessage.data.screen);
       });
-      messaging().setBackgroundMessageHandler(async remoteMessage => {
-          console.log(
-              'Notification background:',
-              remoteMessage.data,
-          );
-          navigation.navigate(remoteMessage.data.screen);
+      messaging().setBackgroundMessageHandler(async remoteMessage => { 
+        navigation.navigate(remoteMessage.data.screen);
       });
       return unsubscribe;
   }, []);
@@ -77,38 +78,31 @@ export default function Login({ navigation }) {
           authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
       if (enabled) {
-          getFcmToken()
-          console.log('Authorization status:', authStatus);
+        getFcmToken()
       }
   }
 
   getFcmToken = async() => {
-      const fcmToken = await messaging().getToken();
-      if (fcmToken) {
-          //  console.log(fcmToken);
-          console.log("Your Firebase Token is:", fcmToken);
-      } else {
-          console.log("Failed", "No token received");
-      }
+    await messaging().getToken();
   }
   /** FIREBASE NOTIFICATION NAVIGATOR */
 
     const storeData = async (value) => {
       try {
-          const varr = await AsyncStorage.setItem('@storage_Key', value);
+        await AsyncStorage.setItem('@storage_Key', value);
       } catch (e) {
         // saving error
       }
     }
 
-    getMyStringValue = async () => {
-      try {
-        const logged = await AsyncStorage.getItem('@storage_Key');
-        if (logged) {
-          navigation.navigate('Menu');
-        }
-      } catch(e) {}
-    }
+    // getMyStringValue = async () => {
+    //   try {
+    //     const logged = await AsyncStorage.getItem('@storage_Key');
+    //     if (logged) {
+    //       navigation.navigate('Menu');
+    //     }
+    //   } catch(e) {}
+    // }
     
     async function handleLogin() {
       const unmaskedNasc = Moment(nascUnmaskedField.getRawValue()).format('YYYY-MM-DD');
@@ -154,7 +148,10 @@ export default function Login({ navigation }) {
     }
 
     return (
-        <KeyboardAvoidingView enabled={Platform.OS == 'ios'} behavior="padding" style={styles.container}>
+        <View style={styles.container}>
+        <KeyboardAvoidingView 
+        {...(Platform.OS === 'ios' && { behavior: 'padding' }) }
+        style={{flex: 1}}>
           <Image source={logo} style={styles.logo}/>
     
           <View style={styles.form}>
@@ -208,31 +205,28 @@ export default function Login({ navigation }) {
               </TouchableOpacity>
             </View>
           </View>
-          <View>
-            <TouchableOpacity onPress={ () => navigation.navigate('Satisfaction') } style={styles.ratingButton}>
-              <FontAwesomeIcon icon={ faStar } size={20} color="#fff"/>
-              <Text style={styles.buttonRatingText}>Avaliações</Text>
-            </TouchableOpacity>
-            </View>
         </KeyboardAvoidingView>
+        </View>
       );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
         backgroundColor: '#1976d2',
     },
     logo: {
         width: 155,
-        height: 140
+        height: 140,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginHorizontal: 130,
+        marginVertical: 40 
     },
     form: {
         alignSelf: 'stretch',
         paddingHorizontal: 30,
-        marginTop: 30
+       
     },
     label: {
         fontWeight: 'bold',
