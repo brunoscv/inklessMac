@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, SafeAreaView, View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, ActivityIndicator, Modal } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faClock, faBookReader, faAngry, faMeh, faLaugh, faGrinHearts} from '@fortawesome/free-solid-svg-icons';
+import { HeaderBackButton } from '@react-navigation/stack';
 
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,8 +12,10 @@ import api from '../services/api';
 import axios from 'axios';
 import baseURL from './Baseurl';
 
+import { BackHandler } from 'react-native';
 
-export default function Satisfaction({ navigation }) {
+
+export default function Satisfaction({ route, navigation }) {
 
     function goToMenu() {
         //const response = await api.get()
@@ -22,10 +25,30 @@ export default function Satisfaction({ navigation }) {
 
     const [notifications, setNotifications] = useState([]);
     const [notParse, setNotParse] = useState([]);
-    const agendamento = navigation.getParam('scheduling_id', '0');
+    const agendamento = route.params?.scheduling_id;
     const [callLoading, setCallLoading] = useState(false);
     const [connState, setConnState] = useState(0);
     const [response, setResponse] = useState([]);
+
+    React.useLayoutEffect(() => {     
+        navigation.setOptions({
+            headerLeft: (...props) => (
+                <HeaderBackButton {...props}           
+                    onPress={() => {
+                        navigation.navigate('Menu')
+                    }}          
+                    label=' Menu'           
+                    tintColor='white'         
+                    />       
+            ),     
+        });   
+    }, [navigation]);
+
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
 
     useEffect(() => {
         NetInfo.fetch().then(state => {
@@ -46,15 +69,12 @@ export default function Satisfaction({ navigation }) {
         requestUserPermission();
         function loadNotifications() {
             messaging().onNotificationOpenedApp(async remoteMessage => {
-                console.log('Message:', remoteMessage.data);
                 setNotifications(JSON.stringify(remoteMessage.data));
             });
             messaging().onMessage(async remoteMessage => {
-                console.log('Message:', remoteMessage.data);
                 setNotifications(JSON.stringify(remoteMessage.data));
             });
             messaging().setBackgroundMessageHandler(async remoteMessage => {
-                console.log('Message:', remoteMessage.data);
                 setNotifications(JSON.stringify(remoteMessage.data));
             });
         }
@@ -69,18 +89,11 @@ export default function Satisfaction({ navigation }) {
 
     if (enabled) {
       getFcmToken()
-      console.log('Authorization status:', authStatus);
     }
   }
 
     getFcmToken = async () => {
-        const fcmToken = await messaging().getToken();
-        if (fcmToken) {
-        console.log(fcmToken);
-        console.log("Your Firebase Token is:", fcmToken);
-        } else {
-        console.log("Failed", "No token received");
-        }
+        await messaging().getToken();
     }
 
     async function handle(rating, id) {
@@ -97,14 +110,12 @@ export default function Satisfaction({ navigation }) {
             data: JSON.stringify(data),
             headers: { "content-type": "application/json" }
         };
-        console.log(config.url);
 
         if (connState.isConnected == true) {
             const responsed = await axios(config);
             if( responsed.status == 200 ) {
             setResponse(responsed);
             setCallLoading(false);
-            console.log(responsed);
             Alert.alert(
                 "Confirmação",
                 "A avaliação foi realizada com sucesso! Obrigado!",
@@ -145,7 +156,6 @@ export default function Satisfaction({ navigation }) {
         const user_id = await AsyncStorage.getItem('@storage_Key') || 30059;
         //const user_id = 30059;
         const response = await api.get('api/mobile/messageapps/satisfaction/search/' + user_id, { responseType: 'json' });
-        
         //O response retorna como objeto no Inkless
         //É preciso dar um cast para array, como é feito abaixo.
         const arrResponse = []
@@ -153,7 +163,6 @@ export default function Satisfaction({ navigation }) {
         //
         setAttendances(arrResponse);
         setLoading(!loading);
-        console.log(arrResponse[0].body)
     }
     loadAttendances();
   }, []);
@@ -223,8 +232,9 @@ export default function Satisfaction({ navigation }) {
                     <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
                 </TouchableOpacity>
             
-                <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Voltar</Text></View>
+                <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Avaliação de Atendimento</Text></View>
             </View>
+           
             {!loading ?
                   renderElements(attendances)
                 :

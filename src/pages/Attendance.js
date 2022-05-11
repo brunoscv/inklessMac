@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView, View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { HeaderBackButton } from '@react-navigation/stack';
 
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,7 +13,9 @@ import api from '../services/api';
 import axios from 'axios';
 import baseURL from './Baseurl';
 
-export default function Attendance({ navigation }) {
+import { BackHandler } from 'react-native';
+
+export default function Attendance({ route, navigation }) {
 
     function goToMenu() {
         //const response = await api.get()
@@ -22,10 +25,31 @@ export default function Attendance({ navigation }) {
 
     const [notifications, setNotifications] = useState([]);
     const [notParse, setNotParse] = useState([]);
-    const agendamento = navigation.getParam('scheduling_id', '0');
+    const agendamento = route.params?.scheduling_id;
 
     const [userId, setUserId] = useState('');
     const [user, setUser] = useState('');
+
+    React.useLayoutEffect(() => {     
+        navigation.setOptions({
+            headerLeft: (...props) => (
+                <HeaderBackButton {...props}           
+                    onPress={() => {
+                        navigation.navigate('Menu')
+                    }}          
+                    label=' Menu'           
+                    tintColor='white'         
+                    />       
+            ),     
+        });   
+    }, [navigation]);
+
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
+    
     useEffect(() => {
       async function loadCustomer() {
         const user_id = await AsyncStorage.getItem('@storage_Key');
@@ -42,19 +66,15 @@ export default function Attendance({ navigation }) {
         requestUserPermission();
         function loadNotifications() {
             messaging().onNotificationOpenedApp(async remoteMessage => {
-                console.log('Message:', remoteMessage.data);
                 setNotifications(JSON.stringify(remoteMessage.data));
             });
             messaging().onMessage(async remoteMessage => {
-                console.log('Message:', remoteMessage.data);
                 setNotifications(JSON.stringify(remoteMessage.data));
             });
             messaging().setBackgroundMessageHandler(async remoteMessage => {
-                console.log('Message:', remoteMessage.data);
                 setNotifications(JSON.stringify(remoteMessage.data));
             });
             messaging().setBackgroundMessageHandler(async remoteMessage => {
-                console.log('Message:', remoteMessage.data);
                 setNotifications(JSON.stringify(remoteMessage.data));
             });
         }
@@ -69,18 +89,11 @@ export default function Attendance({ navigation }) {
 
     if (enabled) {
       getFcmToken()
-      console.log('Authorization status:', authStatus);
     }
   }
 
   getFcmToken = async () => {
-    const fcmToken = await messaging().getToken();
-    if (fcmToken) {
-     console.log(fcmToken);
-     console.log("Your Firebase Token is:", fcmToken);
-    } else {
-     console.log("Failed", "No token received");
-    }
+    await messaging().getToken();
   }
   /** FIREBASE NOTIFICATION NAVIGATOR */
     const [attendances, setAttendances] = useState([]);
@@ -94,9 +107,11 @@ export default function Attendance({ navigation }) {
         const arrResponse = []
         Object.keys(response.data.data).forEach(key => arrResponse.push(response.data.data[key]));
         //
+
+        console.log(attendances);
+        console.log(user_id);
         setAttendances(arrResponse);
         setLoading(!loading);
-        console.log(arrResponse[0].body)
     }
     loadAttendances();
   }, []);
@@ -104,15 +119,16 @@ export default function Attendance({ navigation }) {
     if(attendances == '' || attendances == null) {
       return (
         <View style={{
-          flex: 1,
-          backgroundColor: '#fff', 
-          marginHorizontal: 10,
-          marginVertical: '30%',
-          paddingHorizontal: 14,
-          paddingVertical: 10,
-          borderRadius: 20,
-          alignItems: 'center', justifyContent: 'center'}}>
-          <Text style={{color: '#222', marginVertical: 10}}>Não há mensagens</Text>
+            flex: 1,
+            backgroundColor: '#004ba0', 
+            marginHorizontal: 10,
+            marginVertical: '30%',
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderRadius: 20,
+            alignItems: 'center', justifyContent: 'center'}}>
+              <Text style={{fontSize: 22, color: '#fff'}}>Atendimento Guichê</Text>
+              <Text style={{color: '#fff', marginVertical: 10, fontSize: 22, fontWeight: 'bold'}}>Não há atendimento disponível no momento. </Text>
         </View>
       );
     } else {
@@ -147,22 +163,23 @@ export default function Attendance({ navigation }) {
                     <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
                 </TouchableOpacity>
             
-                <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Voltar</Text></View>
+                <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Atendimento Guichê</Text></View>
             </View>
+           
             {!loading ?
                   renderElements(attendances)
                 :
                   <View style={{
                     flex: 1,
-                    backgroundColor: '#fff', 
+                    backgroundColor: '#004ba0', 
                     marginHorizontal: 10,
                     marginVertical: '30%',
                     paddingHorizontal: 14,
                     paddingVertical: 10,
                     borderRadius: 20,
                     alignItems: 'center', justifyContent: 'center'}}>
-                    <ActivityIndicator size="large" color="#0000ff"/>
-                    <Text style={{color: '#222', marginVertical: 10}}>Carregando ...</Text>
+                    <ActivityIndicator size="large" color="#fff"/>
+                    <Text style={{color: '#fff', marginVertical: 10, fontSize: 15, fontWeight: 'bold'}}>Carregando...</Text>
                   </View>
                   
                 }

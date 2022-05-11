@@ -8,10 +8,18 @@ import api from '../services/api';
 import baseURL from './Baseurl';
 import axios from 'axios';
 
+import { BackHandler } from 'react-native';
+
 export default function Exam({ navigation }) {
 
     const [notifications, setNotifications] = useState([]);
     const [notParse, setNotParse] = useState([]);
+
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
     
     return (
         <View style={styles.container}>

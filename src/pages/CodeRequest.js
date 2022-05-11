@@ -13,10 +13,11 @@ import baseURL from './Baseurl';
 import axios from 'axios';
 
 import { ScrollView } from 'react-native-gesture-handler';
+import { BackHandler } from 'react-native';
 
-export default function CodeRequest({ navigation }) {
+export default function CodeRequest({ route, navigation }) {
 
-    const user_id = navigation.getParam('user_id', '30059');
+    const user_id = route.params?.user_id;
 
     const [connState, setConnState] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -27,6 +28,12 @@ export default function CodeRequest({ navigation }) {
     const [domain, setDomain] = useState('');
     const [phone1, setPhone1] = useState('');
     const [phone2, setPhone2] = useState('');
+
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
     
     useEffect(() => {
         async function loadCustomer() {
@@ -100,31 +107,29 @@ export default function CodeRequest({ navigation }) {
             <View style={{
                 flex: 1,
                 backgroundColor: '#fff', 
-                marginHorizontal: 10,
-                marginVertical: '30%',
-                paddingHorizontal: 14,
-                paddingVertical: 10,
-                borderRadius: 20,
+                marginHorizontal: 1,
+                marginVertical: 2,
+                paddingHorizontal: 1,
                 alignItems: 'center', justifyContent: 'center'}}>
-                <View style={ {backgroundColor: '#fff', padding: 10, flexDirection: 'row'} }>
+                <View style={ {backgroundColor: '#fff', padding: 1, marginVertical:10, flexDirection: 'row'} }>
                     <Image style={styles.icon} source={source} />
                 </View>
-                <View style={ {backgroundColor: '#fff', padding: 20, flexDirection: 'row'} }>
+                <View style={ {backgroundColor: '#fff', padding: 2, marginVertical:10, marginHorizontal: 20, flexDirection: 'row'} }>
                     <Text style={{color: '#000', fontSize: 18, fontWeight: '400'}}>Enviaremos um Email ou SMS com um código de segurança.</Text>
                 </View>
-                <View style={ {backgroundColor: '#fff', padding: 20, flexDirection: 'row'} }>
+                <View style={ {backgroundColor: '#fff', padding: 2, marginVertical:10, flexDirection: 'row'} }>
                     <Text style={{color: '#000', fontSize: 18, fontWeight: '400'}}>Email cadastrado:</Text>
                 </View>
-                <View style={ {backgroundColor: '#f5f5f5', padding: 10, flexDirection: 'row'} }>
+                <View style={ {backgroundColor: '#f5f5f5', padding: 10, marginVertical:10, flexDirection: 'row'} }>
                     <Text style={{color: '#000', fontSize: 18, fontWeight: '400'}}>{email + "********" + domain} </Text>
                 </View>
-                <View style={ {backgroundColor: '#fff', padding: 20, flexDirection: 'row'} }>
+                <View style={ {backgroundColor: '#fff', padding: 2, marginVertical:10, flexDirection: 'row'} }>
                     <Text style={{color: '#000', fontSize: 18, fontWeight: '400'}}>Telefone cadastrado:</Text>
                 </View>
-                <View style={ {backgroundColor: '#f5f5f5', padding: 10, flexDirection: 'row'} }>
+                <View style={ {backgroundColor: '#f5f5f5', padding: 10, marginVertical:10, flexDirection: 'row'} }>
                     <Text style={{color: '#000', fontSize: 18, fontWeight: '400'}}>{phone1 + "***" + phone2 + "**"} </Text>
                 </View>
-                <View style={{backgroundColor: '#fff', padding: 20, flexDirection: 'row'}}>
+                <View style={{backgroundColor: '#fff', padding: 2, flexDirection: 'row'}}>
                 <TouchableOpacity onPress={ () => requestCode(user.id, 1) } style={styles.primaryButton}>
                     <View style={{flexDirection: 'row', justifyContent:'center', alignItems: 'center'}}>
                     <FontAwesomeIcon icon={ faEnvelope } size={18} color="#fff"/><Text style={{color: '#fff', fontWeight: '600', fontSize: 18, padding:5}}>Enviar por Email</Text>
@@ -147,7 +152,7 @@ export default function CodeRequest({ navigation }) {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" style={styles.statusBar}/>
 
-            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }> */ }
+            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }> 
                 <View style={ {backgroundColor: '#1976d2', padding: 10, flexDirection: 'row'} }>
                     <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
                         <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
@@ -155,7 +160,7 @@ export default function CodeRequest({ navigation }) {
                 
                     <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Habilitar Código</Text></View>
                 </View>
-
+            */ }
                 {!loading ?
                         renderElements()
                         :
@@ -314,8 +319,8 @@ const styles = StyleSheet.create({
     },
 
     icon: {
-        width: 317 / 2.4,
-        height: 258 / 2.4,
+        width: 240 / 2.4,
+        height: 200 / 2.4,
         marginLeft: 'auto',
         marginRight: 'auto',
       },

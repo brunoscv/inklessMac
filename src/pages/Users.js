@@ -14,28 +14,34 @@ import messaging from '@react-native-firebase/messaging';
 import api from '../services/api';
 import baseURL from './Baseurl';
 import axios from 'axios';
+import { BackHandler } from 'react-native';
 
 import { ScrollView } from 'react-native-gesture-handler';
 
 // import { Container } from './styles';
 
-export default function Users({ navigation }) {
+export default function Users({ route, navigation }) {
 
     const [connState, setConnState] = useState(0);
     const [response, setResponse] = useState([]);
     const [ loginUsers, setLoginUsers ] = useState();
     const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
     
     useEffect(() => {
         async function loadUsers() {
-            const unmaskedCpf = navigation.getParam('cpf', 'Anonimo');
-            const unmaskedNasc = navigation.getParam('birth', 'Anonimo');
+            const unmaskedCpf = route.params?.cpf;
+            const unmaskedNasc = route.params?.birth;
             const response = await api.post('api/mobile/searchcpfbirth', { cpf: unmaskedCpf, birth: unmaskedNasc, responseType: 'json' });
             const arrResponse = []
             Object.keys(response.data.data).forEach(key => arrResponse.push(response.data.data[key]));
             setLoginUsers(arrResponse);
             setLoading(!loading);
-            console.log(arrResponse);
         }
         loadUsers();
     }, []);
@@ -89,14 +95,11 @@ export default function Users({ navigation }) {
     async function handleLogin(user_id) {
        
         const response = await api.get('api/customer/'+ user_id, { responseType: 'json' });
-        console.log(response.data['data']);
         if (response.data['data'] > '0') {
-           
             //const fcmToken = await messaging().getToken();
             //const fcmToken = "cWB4QZ3USeOvf4eyRXhEBO:APA91bHg_J6-ibH_0Jiebw4ZEArfZ2n3jU_Buk3k7seEXWWQ98ZbIbkHuT2hFOlfA7P0Jq41zRfpZqfDgiQBJNSvlzea5T9MiIJpyENbQM7qEcyw_G7W3Bq8oG0NcJjQNmtRMVZLIVLO";
             setLoading(true);
-            if (connState.isConnected == true) {
-            
+            if (connState.isConnected == true) { 
                 //const responseSec = await api.put('api/inklessapp/update/customer', { id: user_id, device_id: fcmToken, token_id: fcmToken });
                 setLoading(false);
                 // storeData(JSON.stringify(user_id));
@@ -150,9 +153,9 @@ export default function Users({ navigation }) {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" style={styles.statusBar}/>
+            {/*<StatusBar barStyle="dark-content" style={styles.statusBar}/>*/}
 
-            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }> */ }
+            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>
                 <View style={ {backgroundColor: '#1976d2', padding: 10, flexDirection: 'row'} }>
                     <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
                         <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
@@ -160,7 +163,7 @@ export default function Users({ navigation }) {
                 
                     <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Seus Usuários</Text></View>
                 </View>
-
+            */ }
             <ScrollView style={{
                 flex: 1, 
                 backgroundColor: "#f5f5f5"}}>

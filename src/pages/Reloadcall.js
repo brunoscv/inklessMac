@@ -3,6 +3,7 @@ import { SafeAreaView, View, Text, StyleSheet, StatusBar, Image, TouchableOpacit
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faCheckCircle, faPhoneSquareAlt, faVideo } from '@fortawesome/free-solid-svg-icons';
 import { ScrollView } from 'react-native-gesture-handler';
+import { HeaderBackButton } from '@react-navigation/stack';
 
 import { format, parseISO } from "date-fns";
 import NetInfo from "@react-native-community/netinfo";
@@ -12,9 +13,11 @@ import api from '../services/api';
 import baseURL from './Baseurl';
 import axios from 'axios';
 
+import { BackHandler } from 'react-native';
+
 // import { Container } from './styles';
 
-export default function Reloadcall({ navigation }) {
+export default function Reloadcall({ route, navigation }) {
 
     const [schedulings, setSchedulings] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -25,7 +28,27 @@ export default function Reloadcall({ navigation }) {
     const [response, setResponse] = useState([]);
     const [showText, setShowText] = useState(true);
     const [user, setUser] = useState('');
-    const agendamento = navigation.getParam('scheduling_id', '0');
+    const agendamento = route.params?.scheduling_id;
+
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
+
+    React.useLayoutEffect(() => {     
+        navigation.setOptions({
+            headerLeft: (...props) => (
+                <HeaderBackButton {...props}           
+                    onPress={() => {
+                        navigation.navigate('Menu')
+                    }}          
+                    label=' Menu'           
+                    tintColor='white'         
+                    />       
+            ),     
+        });   
+    }, [navigation]);  
 
     useEffect(() => {
       async function loadCustomer() {
@@ -42,7 +65,6 @@ export default function Reloadcall({ navigation }) {
             const response = await api.get('api/mobile/scheduling/' + agendamento, { responseType: 'json' });
             setSchedulings(response);
             setLoading(!loading);
-            console.log(response.data);
         }
         loadSchedulings();
     }, []);
@@ -72,11 +94,16 @@ export default function Reloadcall({ navigation }) {
     async function loadVideoCall() {
         setCallLoading(true);
         const response = await api.get('api/mobile/scheduling/' + agendamento, { responseType: 'json' });
+
+        console.log(response);
+
+        console.log(agendamento);
+
+        console.log(response.data.apiKey);
+        console.log(response.data.sessionId);
+        console.log(response.data.tokenId);
         if(response.status == 200) {
             setCallLoading(false);
-            console.log(response.data.apiKey);
-            console.log(response.data.session_id);
-            console.log(response.data.session_token);
             navigation.navigate('Video', { apiKey: `${response.data.apiKey}`, sessionId: `${response.data.session_id}`, tokenId: `${response.data.session_token}` });
         }
     }
@@ -93,7 +120,6 @@ export default function Reloadcall({ navigation }) {
                 
                     <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Teleconsulta</Text></View>
                 </View>
-            
             <ScrollView style={{
                 flex: 1, 
                 backgroundColor: "#f5f5f5"}}>

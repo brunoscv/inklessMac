@@ -12,6 +12,8 @@ import messaging from '@react-native-firebase/messaging';
 
 import api from '../services/api';
 
+import { BackHandler } from 'react-native';
+
 export default function Report({ navigation }) {
 
     const [isDownloaded, setIsDownloaded] = useState('');
@@ -19,6 +21,12 @@ export default function Report({ navigation }) {
     const [loading, setLoading] = useState('');
     const [user, setUser] = useState('');
 
+    useEffect(() => {
+      BackHandler.addEventListener('hardwareBackPress', () => true);
+      return () =>
+        BackHandler.removeEventListener('hardwareBackPress', () => true);
+    }, []);
+    
     useEffect(() => {
         async function loadCustomer() {
         const user_id = await AsyncStorage.getItem('@storage_Key');
@@ -71,7 +79,6 @@ export default function Report({ navigation }) {
       const file_URL = 'https://demo.denarius.digital/storage/'+ document;
       const encodedURI = encodeURI(file_URL); 
       const { config, fs } = RNFetchBlob;
-      console.log(file_URL);
       //let PictureDir = fs.dirs.PictureDir;
       const DocumentDir = Platform.OS == 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir
       const configfb = {
@@ -96,7 +103,6 @@ export default function Report({ navigation }) {
       config(configOptions)
       .fetch('GET', encodedURI)
       .then(res => {
-      console.log('res -> ', JSON.stringify(res));
       if (Platform.OS === "ios") {
         RNFetchBlob.fs.writeFile(configfb.path, res.data, 'base64');
         RNFetchBlob.ios.previewDocument(configfb.path);
@@ -168,7 +174,6 @@ export default function Report({ navigation }) {
         const unsubscribe = messaging().onMessage(async remoteMessage => {
           //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
           setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
-          console.log(remoteMessage.data);
           if(remoteMessage.data.screen == "Attendance" || remoteMessage.data.screen == "Clinic") {
             //Quando a notificação é para o atendimento em guiche e no consultorio, o aplicativo busca o id do customer para fazer 
             //a impressao das informações na tela do usuário.
@@ -181,7 +186,6 @@ export default function Report({ navigation }) {
               ],
               {cancelable: false},
             );
-            console.log(remoteMessage.data.screen);
           } else {
             if(remoteMessage.data.scheduling_id) {
               Alert.alert(
@@ -192,7 +196,6 @@ export default function Report({ navigation }) {
                 ],
                 {cancelable: false},
               );
-              //console.log(remoteMessage.data.scheduling_id);
             }
             if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
               Alert.alert(
@@ -203,7 +206,6 @@ export default function Report({ navigation }) {
                 ],
                 {cancelable: false},
               );
-              //console.log(remoteMessage.data.scheduling_id);
             }
           } 
         });
@@ -215,7 +217,6 @@ export default function Report({ navigation }) {
           if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
             navigation.navigate(remoteMessage.data.screen)
           }
-          console.log(remoteMessage.data.scheduling_id);
         });
         messaging().setBackgroundMessageHandler(async remoteMessage => {
           setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
@@ -225,7 +226,6 @@ export default function Report({ navigation }) {
           if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
             navigation.navigate(remoteMessage.data.screen)
           }
-          console.log(remoteMessage.data.scheduling_id);
         });
         return unsubscribe;
        }, []);
@@ -242,7 +242,7 @@ export default function Report({ navigation }) {
   }
 
   getFcmToken = async () => {
-    const fcmToken = await messaging().getToken();
+    await messaging().getToken();
   }
   /** FIREBASE NOTIFICATION NAVIGATOR */
   
@@ -250,7 +250,7 @@ export default function Report({ navigation }) {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" style={styles.statusBar}/>
 
-            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }> */ }
+            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>*/ }
                 <View style={ {backgroundColor: '#1976d2', padding: 10, flexDirection: 'row'} }>
                     <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
                         <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
@@ -258,7 +258,6 @@ export default function Report({ navigation }) {
                 
                     <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Laudos</Text></View>
                 </View>
-
             <ScrollView style={{
               flex: 1, 
               backgroundColor: "#f5f5f5"}}>

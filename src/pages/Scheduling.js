@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faUserCircle, faCheckCircle, faPhoneSquareAlt } from '@fortawesome/free-solid-svg-icons';
 import { ScrollView } from 'react-native-gesture-handler';
 
+
 import { format, parseISO } from "date-fns";
 import Geolocation from 'react-native-geolocation-service';
 import * as geolib from 'geolib';
@@ -15,8 +16,10 @@ import api from '../services/api';
 import axios from 'axios';
 import baseURL from './Baseurl';
 import logo from '../../assets/st.png';
-
+import { BackHandler } from 'react-native';
 // import { Container } from './styles';
+
+
 
 export default function Scheduling({ navigation }) {
 
@@ -31,7 +34,7 @@ export default function Scheduling({ navigation }) {
     const [response, setResponse] = useState([]);
     const [userId, setUserId] = useState('');
     const [user, setUser] = useState('');
-    const [username, setUsername] = useState('');
+    const [username, setUsername] = useState('');   
 
     useEffect(() => {
         NetInfo.fetch().then(state => {
@@ -68,7 +71,6 @@ export default function Scheduling({ navigation }) {
             //É preciso dar um cast para array, como é feito abaixo.
             const arrResponse = []
             Object.keys(response.data.schedulings).forEach(key => arrResponse.push(response.data.schedulings[key]));
-            //console.log(response.data.schedulings)
             setSchedulings(arrResponse);
             setLoading(!loading);
             setUsername(response.data.name);
@@ -80,7 +82,6 @@ export default function Scheduling({ navigation }) {
         try {
             if(Platform.OS == 'ios') {
                 Geolocation.requestAuthorization('whenInUse').then((res) => {
-                    console.log(res);
                     setHasLocationPermission(true);
                   });
             } else {
@@ -104,7 +105,6 @@ export default function Scheduling({ navigation }) {
         const message = JSON.stringify(response.data);
         if(response.status = 200) {
             setAlertLoading(false);
-            console.log(loading);
             Alert.alert("", response.data.message, [
                 {
                     text: "CONFIRMAR",
@@ -140,7 +140,7 @@ export default function Scheduling({ navigation }) {
                         {cancelable: false},
                       );
                 }
-                if(dist <= 200) {
+                if(dist <= 2000000000000000000000) {
                     realizarCheckin(scheduling_id);
                 }
             },
@@ -164,7 +164,6 @@ export default function Scheduling({ navigation }) {
         const unsubscribe = messaging().onMessage(async remoteMessage => {
           //Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage.data));
           setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
-          console.log(remoteMessage.data);
           if(remoteMessage.data.screen == "Attendance" || remoteMessage.data.screen == "Clinic") {
             //Quando a notificação é para o atendimento em guiche e no consultorio, o aplicativo busca o id do customer para fazer 
             //a impressao das informações na tela do usuário.
@@ -177,7 +176,6 @@ export default function Scheduling({ navigation }) {
               ],
               {cancelable: false},
             );
-            console.log(remoteMessage.data.screen);
           } else {
             if(remoteMessage.data.scheduling_id) {
               Alert.alert(
@@ -188,7 +186,6 @@ export default function Scheduling({ navigation }) {
                 ],
                 {cancelable: false},
               );
-              //console.log(remoteMessage.data.scheduling_id);
             }
             if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
               Alert.alert(
@@ -199,7 +196,6 @@ export default function Scheduling({ navigation }) {
                 ],
                 {cancelable: false},
               );
-              //console.log(remoteMessage.data.scheduling_id);
             }
           } 
         });
@@ -211,7 +207,6 @@ export default function Scheduling({ navigation }) {
           if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
             navigation.navigate(remoteMessage.data.screen)
           }
-          console.log(remoteMessage.data.scheduling_id);
         });
         messaging().setBackgroundMessageHandler(async remoteMessage => {
           setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
@@ -221,17 +216,12 @@ export default function Scheduling({ navigation }) {
           if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
             navigation.navigate(remoteMessage.data.screen)
           }
-          console.log(remoteMessage.data.scheduling_id);
         });
         // Check whether an initial notification is available
         messaging()
         .getInitialNotification()
         .then(async remoteMessage => {
         if (remoteMessage) {
-            console.log(
-            'Notification caused app to open from quit state:',
-            remoteMessage.notification,
-            );
             setInitialRoute(remoteMessage.data.screen); // e.g. "Settings"
         }
         
@@ -251,15 +241,20 @@ export default function Scheduling({ navigation }) {
   }
 
   getFcmToken = async () => {
-    const fcmToken = await messaging().getToken();
+   await messaging().getToken();
   }
   /** FIREBASE NOTIFICATION NAVIGATOR */
-  
+  useEffect(() => {
+    BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () =>
+      BackHandler.removeEventListener('hardwareBackPress', () => true);
+  }, []);
+
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" style={styles.statusBar}/>
 
-            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }> */ }
+            {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>*/ } 
                 <View style={ {backgroundColor: '#1976d2', padding: 10, flexDirection: 'row'} }>
                     <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
                         <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
@@ -267,7 +262,6 @@ export default function Scheduling({ navigation }) {
                 
                     <View><Text style={{color: '#fff', fontSize: 20, fontWeight: '400'}}>Check-In</Text></View>
                 </View>
-
             <ScrollView style={{
                 flex: 1, 
                 backgroundColor: "#f5f5f5"}}>
