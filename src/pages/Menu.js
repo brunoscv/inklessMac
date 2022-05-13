@@ -42,6 +42,8 @@ export default function Menu({ navigation }) {
   useEffect(() => {
     requestUserPermission();
     const unsubscribe = messaging().onMessage(async remoteMessage => {
+
+      console.log(remoteMessage.data);
       setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
         if(remoteMessage.data.screen == "Attendance" || remoteMessage.data.screen == "Clinic") {
           //Quando a notificação é para o atendimento em guiche e no consultorio, o aplicativo busca o id do customer para fazer 
@@ -86,6 +88,8 @@ export default function Menu({ navigation }) {
       if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
         navigation.navigate(remoteMessage.data.screen)
       }
+
+      console.log(remoteMessage.data);
     });
     messaging().setBackgroundMessageHandler(async remoteMessage => {
       setScheduling(JSON.stringify(remoteMessage.data.scheduling_id));
@@ -95,6 +99,7 @@ export default function Menu({ navigation }) {
       if( !remoteMessage.data.scheduling_id && remoteMessage.data.scheduling_id == null ) {
         navigation.navigate(remoteMessage.data.screen)
       }
+      console.log(remoteMessage.data);
     });
     return unsubscribe;
    }, []);
