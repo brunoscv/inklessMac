@@ -119,9 +119,13 @@ export default function Menu({ navigation }) {
         <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row', justifyContent: 'space-between'} }>
           <Text style={styles.menuText}>Bem vindo(a):</Text>
           {!user.image ? 
-            <Image style={styles.cardAvatar} source={require('../../assets/user.png')}/>
-            : 
-            <Image style={styles.cardAvatar} source={{uri: baseURL + 'storage/'+ user.image}}/> 
+            <TouchableOpacity onPress={ () => navigation.navigate('Profile') } style={{}}>
+              <Image style={styles.cardAvatar} source={require('../../assets/user.png')}/>
+            </TouchableOpacity>
+            :
+            <TouchableOpacity onPress={ () => navigation.navigate('Profile') } style={{}}>
+              <Image style={styles.cardAvatar} source={{uri: baseURL + 'storage/'+ user.image}}/> 
+            </TouchableOpacity>
           }
         </View>
         <Text style={styles.nameText}>{user.name}</Text>

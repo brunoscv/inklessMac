@@ -26,6 +26,7 @@ import Attendance from './src/pages/Attendance';
 import Clinic from './src/pages/Clinic';
 import Acceptcall from './src/pages/Acceptcall';
 import Reloadcall from './src/pages/Reloadcall';
+import Profile from './src/pages/Profile';
 
 import messaging from '@react-native-firebase/messaging';
 
@@ -130,6 +131,7 @@ export default function App() {
           <Stack.Screen name="Menu" component={Menu} options={{headerShown: false, headerLeft: null, gestureEnabled: false, }} />
           <Stack.Screen name="Acceptcall" component={Acceptcall} options={{title: "Aceitar Teleconsulta", headerShown: false, headerLeft: null, gestureEnabled: false, }}/>
           <Stack.Screen name="Attendance" component={Attendance} options={{title: "Atendimento Guichê", headerShown: false, headerLeft: null, gestureEnabled: false, }}/>
+          <Stack.Screen name="Profile" component={Profile} options={{title: "Perfil do Usuário", headerShown: false, headerLeft: null, gestureEnabled: false, }}/>
           <Stack.Screen name="Clinic" component={Clinic} options={{title: "Atendimento Consultório", headerShown: false, headerLeft: null, gestureEnabled: false, }}/>
           <Stack.Screen name="CodeConfirm" component={CodeConfirm} options={{ title: "Confirmar Código", headerLeft: null, gestureEnabled: false, }}/>
           <Stack.Screen name="CodeRequest" component={CodeRequest} options={{ title: "Enviar Código", headerLeft: null, gestureEnabled: false, }}/>
