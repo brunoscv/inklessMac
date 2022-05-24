@@ -39,7 +39,7 @@ export default function Reloadscheduling({ navigation }) {
             headerLeft: (...props) => (
                 <HeaderBackButton {...props}           
                     onPress={() => {
-                        navigation.navigate('Menu')
+                        navigation.reset({ index: 0, routes: [{ name: "Menu" }], })
                     }}          
                     label=' Menu'           
                     tintColor='white'         
@@ -254,7 +254,7 @@ export default function Reloadscheduling({ navigation }) {
 
             {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }> */}
                 <View style={ {backgroundColor: '#1976d2', padding: 10, flexDirection: 'row'} }>
-                    <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
+                    <TouchableOpacity  onPress={() => navigation.reset({ index: 0, routes: [{ name: "Menu" }], }) } style={{padding: 5}}>
                         <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
                     </TouchableOpacity>
                 

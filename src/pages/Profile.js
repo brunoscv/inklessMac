@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react';
 
-import { SafeAreaView, View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { SafeAreaView, View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, ActivityIndicator,Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faArrowLeft, faCameraRetro, faPhotoVideo } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faCameraRetro, faPhotoVideo, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { HeaderBackButton } from '@react-navigation/stack';
 
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from "@react-native-community/netinfo";
-import { format, parseISO } from "date-fns";
+import { format, fromUnixTime, parseISO } from "date-fns";
 
 import api from '../services/api';
 import axios from 'axios';
 import baseURL from './Baseurl';
 
 import { BackHandler } from 'react-native';
+
+import * as ImagePicker from "react-native-image-picker"
 
 export default function Profile({ route, navigation }) {
 
@@ -23,13 +25,14 @@ export default function Profile({ route, navigation }) {
 
     const [userId, setUserId] = useState('');
     const [user, setUser] = useState([]);
+    const [visible, setVisible] = useState(true);
 
     React.useLayoutEffect(() => {     
         navigation.setOptions({
             headerLeft: (...props) => (
                 <HeaderBackButton {...props}           
                     onPress={() => {
-                        navigation.navigate('Menu')
+                        navigation.reset({ index: 0, routes: [{ name: "Menu" }], })
                     }}          
                     label=' Menu'           
                     tintColor='white'         
@@ -90,6 +93,123 @@ export default function Profile({ route, navigation }) {
   }
   /** FIREBASE NOTIFICATION NAVIGATOR */
 
+    const [resourcePath, setResourcePath] = useState();
+    const [fileName, setFileName] = useState();
+    const [fileData, setFileData] = useState();
+    const [fileUri, setFileUri] = useState('');
+    cameraLaunch = () => {
+        let options = {
+            storageOptions: {
+                skipBackup: true,
+                path: 'images',
+            },
+            maxWidth:480,
+            maxHeight: 640,
+            cameraType: 'front',
+            mediaType: 'photo',
+            cropping: true,
+            quality: 0.5
+        };
+        ImagePicker.launchCamera(options, (res) => {
+            if (res.didCancel) {
+                console.log('User cancelled image picker');
+            } else if (res.error) {
+                console.log('ImagePicker Error: ', res.error);
+            } else if (res.customButton) {
+                console.log('User tapped custom button: ', res.customButton);
+                alert(res.customButton);
+            } else {
+                const source = { uri: res.assets[0].uri };
+                console.log('response', JSON.stringify(res));
+                console.log('uri', JSON.stringify(res.assets[0].uri));
+                setFileName(res.assets[0].fileName)
+                setFileData(res.assets[0].type)
+                setFileUri(res.assets[0].uri)
+                setResourcePath(source)
+                setVisible(false)
+            }
+        });
+    }
+
+    imageGalleryLaunch = () => {
+        let options = {
+            storageOptions: {
+                skipBackup: true,
+                path: 'images',
+            },
+            maxWidth:480,
+            maxHeight: 640,
+            mediaType: 'photo',
+            cropping: true,
+            quality: 0.5
+
+        };
+        ImagePicker.launchImageLibrary(options, (res) => {
+            console.log('Response = ', res);
+            if (res.didCancel) {
+                console.log('User cancelled image picker');
+            } else if (res.error) {
+                console.log('ImagePicker Error: ', res.error);
+            } else if (res.customButton) {
+                console.log('User tapped custom button: ', res.customButton);
+                alert(res.customButton);
+            } else {
+                const source = { uri: res.uri };
+                //console.log('response', JSON.stringify(res.uri));
+                setFileName(res.assets[0].fileName)
+                setFileData(res.assets[0].type)
+                setFileUri(res.assets[0].uri)
+                setResourcePath(source)
+                setVisible(false)
+            }
+            });
+    }
+
+    async function upload() {
+        
+        const payload = new FormData();
+        
+        payload.append('customer_id', user.id);
+         payload.append('image', {
+            uri: fileUri,
+            type: fileData,
+            name: fileName || fileUri.substring(fileUri.lastIndexOf('/') + 1),
+        });
+
+        //console.log(JSON.stringify(payload));
+        const response = await api.post('api/inklessapp/update/customer/image', payload, {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "multipart/form-data; charset=utf-8;",
+                "Access-Control-Allow-Headers": "Content-Type",
+            }
+        });
+
+        console.log(JSON.stringify(response));
+        
+        if(response) {
+            Alert.alert(
+                "Upload de Imagem",
+                "Imagem alterada com sucesso!",
+                [
+                  {text: 'CONFIRMAR', onPress: () => navigation.reset({ index: 0, routes: [{ name: "Menu" }], })},
+                ],
+                {cancelable: false},
+            );
+        } else {
+            Alert.alert(
+                "Upload de Imagem",
+                "Não foi possível alterar a imagem!",
+                [
+                  {text: 'CONFIRMAR', onPress: () => navigation.reset({ index: 0, routes: [{ name: "Profile" }], })},
+                ],
+                {cancelable: false},
+            );
+        }
+       
+    }
+
+
   const renderElements = (user) => {
     if(user == '' || user == null) {
       return (
@@ -114,23 +234,31 @@ export default function Profile({ route, navigation }) {
             </View>
             
             <View style={{paddingVertical: 5}}>
-            {!user.image ? 
-                <Image style={{width: 150, height:150, borderRadius: 150 / 2}} source={require('../../assets/user.png')}/>
-                : 
-                <Image style={{width: 150, height:150, borderRadius: 150 / 2}} source={{uri: baseURL + 'storage/' + user.image}}/>
+            {
+                visible ? ( !user.image ?  <Image style={{width: 150, height:150, borderRadius: 150 / 2}} source={require('../../assets/user.png')}/> : <Image style={{width: 150, height:150, borderRadius: 150 / 2}} source={{uri: baseURL + 'storage/' + user.image}}/>
+                ) : 
+                <View style={{}}>
+                    <Image style={{width: 150, height:150, borderRadius: 150 / 2}} source={{uri: fileUri}}/>
+                    <TouchableOpacity onPress={ () => upload() } style={{paddingVertical: 10}}>
+                        <View style={styles.successButton}>
+                                <FontAwesomeIcon icon={ faCheckCircle } size={20} color="#004ba0"/>
+                                <Text style={styles.buttonText}>Salvar Imagem</Text>
+                        </View>
+                    </TouchableOpacity>
+                </View>
             }
             </View>
             <View style={{paddingHorizontal: 20}}>
                 <Text style={{fontSize: 16, color: '#fff', paddingVertical: 5}}>Trocar Imagem: </Text>
             </View>
             <View style={styles.cardFooter}>
-                <TouchableOpacity onPress={ () => navigation.navigate('Scheduling') } style={{}}>
+                <TouchableOpacity onPress={ () => cameraLaunch() } style={{}}>
                     <View style={styles.successButton}>
                         <FontAwesomeIcon icon={ faCameraRetro } size={20} color="#004ba0"/>
                         <Text style={styles.buttonText}>Câmera</Text>
                     </View>
                 </TouchableOpacity>
-                    <TouchableOpacity onPress={ () => navigation.navigate('Menu') } style={{}}>
+                    <TouchableOpacity onPress={ () => imageGalleryLaunch() } style={{}}>
                         <View style={styles.successButton}>
                                 <FontAwesomeIcon icon={ faPhotoVideo } size={20} color="#004ba0"/>
                                 <Text style={styles.buttonText}>Galeria</Text>
@@ -152,7 +280,7 @@ export default function Profile({ route, navigation }) {
             <StatusBar barStyle="light-content" style={styles.statusBar}/>
 
             <View style={ {backgroundColor: '#004ba0', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>
-                <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
+                <TouchableOpacity  onPress={() => navigation.reset({ index: 0, routes: [{ name: "Menu" }], }) } style={{padding: 5}}>
                     <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
                 </TouchableOpacity>
             
@@ -176,9 +304,6 @@ export default function Profile({ route, navigation }) {
                   </View>
                   
                 }
-                
-           
-            
         </SafeAreaView>
     )
 }

@@ -25,6 +25,8 @@ export default function Menu({ navigation }) {
         const response = await api.get('api/customer/' + user_id, { responseType: 'json' });
         setUser(response.data.data);
         setUserId(user_id);
+
+        console.log("reiniciando customer");
       }
       loadCustomer();
     }, []);
@@ -32,7 +34,7 @@ export default function Menu({ navigation }) {
   async function removeValue() {
     try {
       await AsyncStorage.removeItem('@storage_Key');
-      navigation.navigate('Login');
+      navigation.reset({ index: 0, routes: [{ name: "Login" }], });
     } catch(e) {}
   }
 
@@ -132,30 +134,30 @@ export default function Menu({ navigation }) {
       </View>
       <View style={styles.content}>
         <View style={styles.firstrow}>
-          <TouchableOpacity onPress={ () => navigation.navigate('Scheduling') } style={styles.button}>
+          <TouchableOpacity onPress={ () => navigation.reset({ index: 0, routes: [{ name: "Scheduling" }], }) } style={styles.button}>
             <FontAwesomeIcon icon={ faClock } size={60} color="#fff"/>
             <Text style={styles.buttonText}>Check-In</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={ () => navigation.navigate('Historic') } style={styles.button}>
+          <TouchableOpacity onPress={ () => navigation.reset({ index: 0, routes: [{ name: "Historic" }], }) } style={styles.button}>
             <FontAwesomeIcon icon={ faBookReader } size={60} color="#fff"/>
             <Text style={styles.buttonText}>Agendamentos</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.secondrow}>
-          <TouchableOpacity onPress={ () => navigation.navigate('Report') } style={styles.button}>
+          <TouchableOpacity onPress={ () => navigation.reset({ index: 0, routes: [{ name: "Report" }], }) } style={styles.button}>
             <FontAwesomeIcon icon={ faFile } size={60} color="#fff"/>
             <Text style={styles.buttonText}>Laudos</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity onPress={ () => navigation.navigate('Document') } style={styles.button}>
+          <TouchableOpacity onPress={ () => navigation.reset({ index: 0, routes: [{ name: "Document" }], }) } style={styles.button}>
             <FontAwesomeIcon icon={ faFolder } size={60} color="#fff"/>
             <Text style={styles.buttonText}>Documentos</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.thirdrow}>
-          <TouchableOpacity onPress={ () => navigation.navigate('Satisfaction') } style={styles.button}>
+          <TouchableOpacity onPress={ () => navigation.reset({ index: 0, routes: [{ name: "Satisfaction" }], }) } style={styles.button}>
             <FontAwesomeIcon icon={ faStar } size={60} color="#fff"/>
             <Text style={styles.buttonText}>Avaliações</Text>
           </TouchableOpacity>

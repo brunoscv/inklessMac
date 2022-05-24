@@ -18,14 +18,31 @@ export default function Login({ navigation }) {
     const [nasc, setNasc] = useState('');
     const [response, setResponse] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [pageLoading, setPageLoading] = useState(false);
     const [connState, setConnState] = useState(0);
-
     const [userId, setUserId] = useState('');
     const [id, setId] = useState('');
     const [cpfUnmaskedField, setCpfUnmaskedField] = useState('');
     const [nascUnmaskedField, setNascUnmaskedField] = useState('');
     const [isLogedin, setIsLogedin] = useState(false);
 
+    useEffect(() => {
+      async function loadCustomer() {
+        const user_id = await AsyncStorage.getItem('@storage_Key');
+        setPageLoading(true); 
+        if(!user_id) {
+          setTimeout(() => {
+            setPageLoading(false);
+          }, 2000);
+          renderElements();
+        } else {
+          setPageLoading(false);
+          navigation.reset({ index: 0, routes: [{ name: "Menu" }], });
+        }
+      }
+      loadCustomer();
+    }, []);
+    
     useEffect(() => {
       NetInfo.fetch().then(state => {
           setConnState(state);
@@ -85,23 +102,13 @@ export default function Login({ navigation }) {
         // saving error
       }
     }
-
-    // getMyStringValue = async () => {
-    //   try {
-    //     const logged = await AsyncStorage.getItem('@storage_Key');
-    //     if (logged) {
-    //       navigation.navigate('Menu');
-    //     }
-    //   } catch(e) {}
-    // }
     
     async function handleLogin() {
       const unmaskedNasc = Moment(nascUnmaskedField.getRawValue()).format('YYYY-MM-DD');
       const unmaskedCpf = cpfUnmaskedField.getRawValue();
       const response = await api.post('api/mobile/searchcpfbirth', { cpf: unmaskedCpf, birth: unmaskedNasc, responseType: 'json' });
 
-      if (response.data['data'] > '0') {   
-        //const fcmToken = await messaging().getToken();
+      if (response.data['data'] > '0') {
         setLoading(true);
         if (connState.isConnected == true) {
         
@@ -138,20 +145,12 @@ export default function Login({ navigation }) {
       }
     }
 
-    return (
-        <KeyboardAvoidingView enabled={Platform.OS == 'ios'} behavior="padding" style={styles.container}>
+    const renderElements = () => {
+      return (
+        <View style={styles.content}>
           <Image source={logo} style={styles.logo}/>
-    
           <View style={styles.form}>
             <Text style={styles.label}>CPF:</Text>
-            { /*<TextInput
-              style={styles.input}
-              placeholder="Ex: 123.456.789-00"
-              placeholderTextColor="#fff"
-              keyboardType="number-pad"
-              onChangeText={ cpf => setCpf(cpf)}
-              defaultValue={cpf}
-            />*/}
             <TextInputMask
               type={'cpf'}
               style={styles.input}
@@ -162,17 +161,7 @@ export default function Login({ navigation }) {
               // add the ref to a local var
               ref={(ref) => setCpfUnmaskedField(ref)}
             /> 
-            
-    
             <Text style={styles.label}>Data Nascimento:</Text>
-            {/* <TextInput
-              style={styles.input}
-              placeholder="Ex: 99/99/9999"
-              placeholderTextColor="#fff"
-              //keyboardType="number-pad"
-              onChangeText={nasc => setNasc(nasc)}
-              defaultValue={nasc}
-            /> */}
             <TextInputMask
                 type={'datetime'}
                 options={{
@@ -183,7 +172,6 @@ export default function Login({ navigation }) {
                 placeholderTextColor="#fff"
                 value={nasc}
                 onChangeText={nasc => setNasc(nasc)}
-                // add the ref to a local var
                 ref={(ref) => setNascUnmaskedField(ref)}
             />
             <View>
@@ -193,16 +181,40 @@ export default function Login({ navigation }) {
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+      );
+    }
+
+
+    return (
+        <KeyboardAvoidingView enabled={Platform.OS == 'ios'} behavior="padding" style={styles.container}>
+          {!pageLoading ?
+            renderElements() :
+            <View style={{
+              flex: 1,
+              backgroundColor: '#1976d2',
+              width: '100%',
+              alignItems: 'center', justifyContent: 'center'}}>
+              <ActivityIndicator size="large" color="#fff"/>
+              <Text style={{color: '#fff', marginVertical: 10, fontSize: 15, fontWeight: 'bold'}}>Carregando...</Text>
+            </View>        
+          }
         </KeyboardAvoidingView>
       );
 }
 
 const styles = StyleSheet.create({
+    content: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: '100%'
+    },
     container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#1976d2',
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#1976d2',
     },
     logo: {
         width: 155,

@@ -47,7 +47,7 @@ export default function Video({ route, navigation }) {
     },
     streamDestroyed: event => {
       console.log('Stream destroyeeeeeeeeeed!', event);
-      navigation.navigate('Menu');
+      navigation.reset({ index: 0, routes: [{ name: "Menu" }], });
     },
     connectionDestroyed: (event) => {
       // subscriberViewHandler();
@@ -62,7 +62,7 @@ export default function Video({ route, navigation }) {
     },
     sessionDisconnected: (event) => {
       console.log('sessionDisconnected', event);
-      navigation.navigate('Menu');
+      navigation.reset({ index: 0, routes: [{ name: "Scheduling" }], });
     },
     sessionReconnected: (event) => {
       //subscriberViewHandler();
@@ -103,7 +103,7 @@ export default function Video({ route, navigation }) {
   }
 
   const cancelHandler = () => {
-    navigation.navigate('Scheduling');
+    navigation.reset({ index: 0, routes: [{ name: "Scheduling" }], });
   }
 
   return (

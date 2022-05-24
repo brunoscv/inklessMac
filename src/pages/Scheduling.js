@@ -78,6 +78,14 @@ export default function Scheduling({ navigation }) {
         loadSchedulings();
     }, []);
 
+
+    useEffect(() => {
+        async function test() {
+            console.log("testando effect automático");
+        }
+        test();
+    }, []);
+
     async function verifyLocationPermission() {
         try {
             if(Platform.OS == 'ios') {
@@ -108,7 +116,7 @@ export default function Scheduling({ navigation }) {
             Alert.alert("", response.data.message, [
                 {
                     text: "CONFIRMAR",
-                    onPress: () => navigation.navigate('Reloadscheduling')
+                    onPress: () => navigation.reset({ index: 0, routes: [{ name: "Reloadscheduling" }], })
                 }
             ]);
         } else {
@@ -116,7 +124,7 @@ export default function Scheduling({ navigation }) {
             Alert.alert("Houve um erro", "Check-In não pôde ser realizado", [
                 {
                     text: "CONFIRMAR",
-                    onPress: () => navigation.navigate('Reloadscheduling')
+                    onPress: () => navigation.reset({ index: 0, routes: [{ name: "Reloadscheduling" }], })
                 }
             ]);
         } 
@@ -140,7 +148,7 @@ export default function Scheduling({ navigation }) {
                         {cancelable: false},
                       );
                 }
-                if(dist <= 200) {
+                if(dist <= 2000000000000000000000) {
                     realizarCheckin(scheduling_id);
                 }
             },
@@ -251,7 +259,7 @@ export default function Scheduling({ navigation }) {
 
             {/* Colocar essa view de volta no android <View style={{backgroundColor: '#004ba0'}}></View> <View style={ {backgroundColor: '#1976d2', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>*/ } 
                 <View style={ {backgroundColor: '#1976d2', padding: 10, flexDirection: 'row'} }>
-                    <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
+                    <TouchableOpacity  onPress={() => navigation.reset({ index: 0, routes: [{ name: "Menu" }], }) } style={{padding: 5}}>
                         <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
                     </TouchableOpacity>
                 

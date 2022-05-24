@@ -17,12 +17,6 @@ import { BackHandler } from 'react-native';
 
 export default function Clinic({ route, navigation }) {
 
-    function goToMenu() {
-        //const response = await api.get()
-        //await AsyncStorage.setItem('user', 30059);
-        navigation.navigate('Menu');
-    }
-
     const [notifications, setNotifications] = useState([]);
     const [notParse, setNotParse] = useState([]);
     const agendamento = route.params?.scheduling_id;
@@ -32,7 +26,7 @@ export default function Clinic({ route, navigation }) {
             headerLeft: (...props) => (
                 <HeaderBackButton {...props}           
                     onPress={() => {
-                        navigation.navigate('Menu')
+                        navigation.reset({ index: 0, routes: [{ name: "Menu" }], })
                     }}          
                     label=' Menu'           
                     tintColor='white'         
@@ -129,7 +123,7 @@ export default function Clinic({ route, navigation }) {
             <StatusBar barStyle="light-content" style={styles.statusBar}/>
 
             <View style={ {backgroundColor: '#004ba0', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>
-                <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
+                <TouchableOpacity  onPress={() => navigation.reset({ index: 0, routes: [{ name: "Menu" }], }) } style={{padding: 5}}>
                     <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
                 </TouchableOpacity>
             

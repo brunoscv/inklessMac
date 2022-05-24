@@ -26,7 +26,7 @@ export default function Exam({ navigation }) {
             <StatusBar barStyle="light-content" style={styles.statusBar}/>
 
             <View style={ {backgroundColor: '#004ba0', padding: 10, borderBottomLeftRadius: 15, borderBottomRightRadius: 15, flexDirection: 'row'} }>
-                <TouchableOpacity  onPress={() => navigation.navigate('Menu') } style={{padding: 5}}>
+                <TouchableOpacity  onPress={() => navigation.reset({ index: 0, routes: [{ name: "Menu" }], }) } style={{padding: 5}}>
                     <FontAwesomeIcon icon={ faArrowLeft } size={20} color="#fff"/>
                 </TouchableOpacity>
             
