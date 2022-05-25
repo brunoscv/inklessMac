@@ -148,7 +148,7 @@ export default function Scheduling({ navigation }) {
                         {cancelable: false},
                       );
                 }
-                if(dist <= 2000000000000000000000) {
+                if(dist <= 200) {
                     realizarCheckin(scheduling_id);
                 }
             },
