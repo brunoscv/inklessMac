@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { SafeAreaView, View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, ActivityIndicator,Alert } from 'react-native';
+import { SafeAreaView, View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, ActivityIndicator, PermissionsAndroid, Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faCameraRetro, faPhotoVideo, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { HeaderBackButton } from '@react-navigation/stack';
