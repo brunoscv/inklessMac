@@ -21,6 +21,12 @@ export default function Clinic({ route, navigation }) {
     const [notParse, setNotParse] = useState([]);
     const agendamento = route.params?.scheduling_id;
 
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
+
     React.useLayoutEffect(() => {     
         navigation.setOptions({
             headerLeft: (...props) => (

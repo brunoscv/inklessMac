@@ -34,6 +34,12 @@ export default function CodeConfirm({ route, navigation }) {
     const [user, setUser] = useState('');
 
     //	"verification_code": "719633",
+
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
     
     useEffect(() => {
         async function loadCustomer() {
