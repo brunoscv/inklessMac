@@ -19,7 +19,7 @@ export default function Satisfaction({ route, navigation }) {
 
     const [notifications, setNotifications] = useState([]);
     const [notParse, setNotParse] = useState([]);
-    const agendamento = route.params?.scheduling_id;
+    const agendamento = route.params?.scheduling_id ? route.params?.scheduling_id : 0;
     const [callLoading, setCallLoading] = useState(false);
     const [connState, setConnState] = useState(0);
     const [response, setResponse] = useState([]);

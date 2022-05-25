@@ -132,13 +132,8 @@ android {
         applicationId "com.videoinkless"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-<<<<<<< HEAD
         versionCode 18
         versionName "2.8.6"
-=======
-        versionCode 17
-        versionName "2.8.5"
->>>>>>> 6fe4c12 (ajustando merge android)
         multiDexEnabled true
     }
     splits {

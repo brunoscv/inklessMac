@@ -19,7 +19,7 @@ export default function Attendance({ route, navigation }) {
 
     const [notifications, setNotifications] = useState([]);
     const [notParse, setNotParse] = useState([]);
-    const agendamento = route.params?.scheduling_id;
+    const agendamento = route.params?.scheduling_id ? route.params?.scheduling_id : 0;
 
     const [userId, setUserId] = useState('');
     const [user, setUser] = useState('');

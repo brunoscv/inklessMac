@@ -9,6 +9,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from "@react-native-community/netinfo";
 import messaging from '@react-native-firebase/messaging';
 
+
+
 import api from '../services/api';
 import logo from '../../assets/inkless.png';
 
@@ -26,11 +28,7 @@ export default function Login({ navigation }) {
     const [nascUnmaskedField, setNascUnmaskedField] = useState('');
     const [isLogedin, setIsLogedin] = useState(false);
 
-    useEffect(() => {
-      BackHandler.addEventListener('hardwareBackPress', () => true);
-      return () =>
-        BackHandler.removeEventListener('hardwareBackPress', () => true);
-    }, []);
+  
 
     useEffect(() => {
       async function loadCustomer() {
@@ -87,6 +85,8 @@ export default function Login({ navigation }) {
 
   requestUserPermission = async() => {
       const authStatus = await messaging().requestPermission();
+
+      console.log("aqui ::::::::", authStatus);
       const enabled =
           authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
           authStatus === messaging.AuthorizationStatus.PROVISIONAL;
@@ -97,7 +97,8 @@ export default function Login({ navigation }) {
   }
 
   getFcmToken = async() => {
-    await messaging().getToken();
+    const a = await messaging().getToken();
+    console.log(a);
   }
   /** FIREBASE NOTIFICATION NAVIGATOR */
 
