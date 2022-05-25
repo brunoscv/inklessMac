@@ -37,6 +37,12 @@ export default function Scheduling({ navigation }) {
     const [username, setUsername] = useState('');   
 
     useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
+
+    useEffect(() => {
         NetInfo.fetch().then(state => {
           setConnState(state);
         });

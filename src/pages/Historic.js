@@ -24,6 +24,12 @@ export default function Historic({ navigation }) {
     const [user, setUser] = useState('');
 
     useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
+
+    useEffect(() => {
         async function loadCustomer() {
           const user_id = await AsyncStorage.getItem('@storage_Key');
           //const user_id = 30059;

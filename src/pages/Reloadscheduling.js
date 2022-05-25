@@ -34,6 +34,12 @@ export default function Reloadscheduling({ navigation }) {
     const [user, setUser] = useState('');
     const [username, setUsername] = useState('');
 
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
+
     React.useLayoutEffect(() => {     
         navigation.setOptions({
             headerLeft: (...props) => (

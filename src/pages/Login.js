@@ -27,6 +27,12 @@ export default function Login({ navigation }) {
     const [isLogedin, setIsLogedin] = useState(false);
 
     useEffect(() => {
+      BackHandler.addEventListener('hardwareBackPress', () => true);
+      return () =>
+        BackHandler.removeEventListener('hardwareBackPress', () => true);
+    }, []);
+
+    useEffect(() => {
       async function loadCustomer() {
         const user_id = await AsyncStorage.getItem('@storage_Key');
         setPageLoading(true); 

@@ -30,6 +30,12 @@ export default function Reloadcall({ route, navigation }) {
     const [user, setUser] = useState('');
     const agendamento = route.params?.scheduling_id;
 
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
+
     React.useLayoutEffect(() => {     
         navigation.setOptions({
             headerLeft: (...props) => (

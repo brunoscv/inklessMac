@@ -24,6 +24,12 @@ export default function Satisfaction({ route, navigation }) {
     const [connState, setConnState] = useState(0);
     const [response, setResponse] = useState([]);
 
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
+
     React.useLayoutEffect(() => {     
         navigation.setOptions({
             headerLeft: (...props) => (

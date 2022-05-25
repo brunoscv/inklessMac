@@ -22,6 +22,12 @@ export default function Video({ route, navigation }) {
   const [video, setVideo] = useState(true);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () =>
+      BackHandler.removeEventListener('hardwareBackPress', () => true);
+  }, []);
+
   const micHandler = () => {
     setMic(!mic)
     !mic ? console.log("Áudio ativado") : console.log("Áudio desativado");

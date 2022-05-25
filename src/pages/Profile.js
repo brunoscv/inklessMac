@@ -33,6 +33,12 @@ export default function Profile({ route, navigation }) {
           BackHandler.removeEventListener('hardwareBackPress', () => true);
       }, []);
 
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
+
     React.useLayoutEffect(() => {     
         navigation.setOptions({
             headerLeft: (...props) => (
