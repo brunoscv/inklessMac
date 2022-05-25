@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-    
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
@@ -33,8 +32,8 @@
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
-        <key>NSAllowsArbitraryLoadsInWebContent</key>  
-        <true/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
 		<key>NSExceptionDomains</key>
 		<dict>
 			<key>localhost</key>
@@ -54,6 +53,8 @@
 	<string>The application will request the user's location and will use the latitude and longitude to compare with the hospital's location to enable or not an appointment check-in.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Your message to user when the microphone is accessed for the first time</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to the photo library to upload an image from user profile.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
