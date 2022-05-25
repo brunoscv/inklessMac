@@ -24,6 +24,12 @@ export default function Attendance({ route, navigation }) {
     const [userId, setUserId] = useState('');
     const [user, setUser] = useState('');
 
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
+
     React.useLayoutEffect(() => {     
         navigation.setOptions({
             headerLeft: (...props) => (
