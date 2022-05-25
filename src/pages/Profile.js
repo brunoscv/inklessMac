@@ -27,6 +27,12 @@ export default function Profile({ route, navigation }) {
     const [user, setUser] = useState([]);
     const [visible, setVisible] = useState(true);
 
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => true);
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', () => true);
+      }, []);
+
     React.useLayoutEffect(() => {     
         navigation.setOptions({
             headerLeft: (...props) => (
