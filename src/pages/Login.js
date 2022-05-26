@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, KeyboardAvoidingView, Platform, Image, StyleSheet, Text, TextInput, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
+import { View, KeyboardAvoidingView, Platform, Image, StyleSheet, Text, TextInput, ActivityIndicator, TouchableOpacity, PermissionsAndroid, Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faAngleRight, faAngry, faStar } from '@fortawesome/free-solid-svg-icons';
 import { TextInputMask } from 'react-native-masked-text';
@@ -28,7 +28,31 @@ export default function Login({ navigation }) {
     const [nascUnmaskedField, setNascUnmaskedField] = useState('');
     const [isLogedin, setIsLogedin] = useState(false);
 
-  
+
+    useEffect(() => {
+      async function requestCameraPermission() {
+        try {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.CAMERA,
+            {
+              title: "App Camera Permission",
+              message:"App needs access to your camera ",
+              buttonNeutral: "Ask Me Later",
+              buttonNegative: "Cancel",
+              buttonPositive: "OK"
+            }
+          );
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+              console.log("Camera permission given");
+          } else {
+              console.log("Camera permission denied");
+          }
+        } catch (err) {
+          console.warn(err);
+        }
+      }
+      requestCameraPermission();
+    }, []);
 
     useEffect(() => {
       async function loadCustomer() {

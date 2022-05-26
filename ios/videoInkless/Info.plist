@@ -44,7 +44,7 @@
 		</dict>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Your message to user when the camera is accessed for the first time</string>
+	<string>The application will request the user's camera to upload an image from user profile</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>The application will request the user's location and will use the latitude and longitude to compare with the hospital's location to enable or not an appointment check-in.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
@@ -52,7 +52,7 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>The application will request the user's location and will use the latitude and longitude to compare with the hospital's location to enable or not an appointment check-in.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Your message to user when the microphone is accessed for the first time</string>
+	<string>The application will request the user's microphone to abble conversation in video calls</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app requires access to the photo library to upload an image from user profile.</string>
 	<key>UIBackgroundModes</key>
