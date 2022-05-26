@@ -303,7 +303,7 @@ export default function Reloadscheduling({ navigation }) {
                                                 scheduling.video_appointment == true ? 
                                                 <TouchableOpacity onPress={ () => realizarCheckin(scheduling.id) } style={styles.primaryButton}>
                                                     <FontAwesomeIcon icon={ faCheckCircle } size={20} color="#fff"/>
-                                                    <Text style={styles.buttonText}>Fazer Check-In Teleconsulta</Text>
+                                                    <Text style={styles.buttonText}>Fazer Check-In</Text>
                                                 </TouchableOpacity> 
                                                 :
                                                 <TouchableOpacity onPress={ () => checkinConsulta(scheduling.id) } style={styles.primaryButton}>
